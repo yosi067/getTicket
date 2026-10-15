@@ -65,12 +65,50 @@ npm run pack    # 打包 zip
 
 ## 入口網站與 GitHub Pages
 
-- `site/index.html`：入口頁，風格與平台一致（淺色橘調）並帶動態效果：打字標題、開賣倒數、跑馬燈、數字滾動、捲動顯示。內容：
+線上網址：https://yosi067.github.io/getTicket/　（售票統整平台：`/app/`，內有「返回入口」按鈕）
+
+### 內容
+- `site/index.html`：入口頁，風格與平台一致（淺色橘調）並帶動態效果：打字標題、開賣倒數、跑馬燈、數字滾動、捲動顯示。
+  - 開賣倒數：有未來的開賣時間時顯示「下一場開賣倒數」；沒有時改顯示「最近一場開賣」與已過多久。
   - 現況分析：可點選交叉篩選，含總覽、交叉比對（類型×月份、地區×類型、平台×類型、場館×月份、類型×星期等熱力圖）、開賣與票價、資料品質。
-  - 台灣演唱會新聞：聚焦台灣來源，並依主題分類。
-  - 客服小幫手（Gemini）：右下角聊天視窗，只回答活動資訊與網站用法；需先部署 `server/` 的 Worker，詳見 [server/README.md](server/README.md)。未設定 `CHAT_API_URL` 時不會顯示。
-  - 「售票統整平台」放在 `app/`。
-- 本機預覽：`npm run site` 後開啟 `dist-site/index.html`（`npm run news` 抓新聞，`npm run site:build` 只重建）。
-- 自動部署：`.github/workflows/pages.yml` 於推送 `main`、每日 06:00（台灣）與手動觸發時，執行測試、更新快照與新聞、建置並部署。
-  首次使用請到 GitHub repo 的 Settings → Pages，把 Source 設為「GitHub Actions」。
+  - 台灣演唱會新聞：只收台灣媒體白名單內的來源（名單在 `scripts/fetch-news.mjs` 的 `TW_SOURCE`／`TW_HOST`），並依主題分類。
+  - 客服小幫手（Gemini）：右下角聊天視窗，只回答活動資訊與網站用法，回答精簡並附追問按鈕。設定方式見下方「客服小幫手」。
+- `app/`：售票統整平台（`demo/ticketwar-web.html`，完整活動資料，移除本機專用的「重新抓取」）。
 - 活動卡片的複製按鈕會產生可直接貼給朋友的重點文字（`formatShareText`）。
+
+### 資料更新頻率與方式
+
+| 資料 | 自動更新 | 來源 |
+| --- | --- | --- |
+| 活動快照（`demo/data/snapshot.json`，約 300 筆） | 每天台灣時間 06:00，另外每次推送 `main` 也會更新 | Ticket Plus、KKTIX、拓元、OPENTIX 公開頁面 |
+| 新聞（`demo/data/news.json`，約 30 則） | 同上 | Google News RSS，經台灣媒體白名單過濾 |
+| 客服知識庫（`chat-context.json`） | 隨每次建置重新產生 | 快照 + `server/site-guide.md` + `使用手冊.md` 節錄 |
+
+- 自動更新由 `.github/workflows/pages.yml` 執行：測試 → 更新快照 → 抓新聞 → 建置 → 部署到 Pages。快照或新聞抓取失敗時沿用 repo 內舊檔，建置不會中斷（看 Actions 日誌的警告）。
+- 自動更新只重新部署網站，不會把新資料提交回 repo；repo 內的快照停留在你上次手動提交的版本。
+- 立即更新：GitHub repo → Actions → Deploy to GitHub Pages → Run workflow。
+- 本機更新：
+
+```
+npm run news          # 只抓新聞
+npm run demo:update   # 抓四個平台快照並重建 demo 的 HTML
+npm run site          # 抓新聞 + 重建 demo + 組出 dist-site/（完整網站）
+npm run site:build    # 不抓資料，只用現有快照與新聞重建 dist-site/
+```
+
+- 本機預覽：`npm run site` 後開啟 `dist-site/index.html`。要在本機看到聊天按鈕，需帶環境變數：`CHAT_API_URL=https://<你的函式網址>/api/chat npm run site:build`。
+- 首次使用 Pages：GitHub repo 的 Settings → Pages，把 Source 設為「GitHub Actions」。
+
+### 客服小幫手（Gemini）
+
+架構：瀏覽器 → 自己部署的小型後端（Vercel 或 Cloudflare Worker）→ Gemini API。金鑰只放在後端的環境變數／Secret，不會出現在前端或 repo。
+
+快速步驟（以 Vercel 為例，完整說明與疑難排解見 [server/README.md](server/README.md)）：
+1. 到 [Google AI Studio](https://aistudio.google.com/apikey) 建立 API 金鑰。
+2. 在 vercel.com 用 GitHub 登入，匯入本 repo（專案名稱需為小寫）。
+3. 專案 Settings → Environment Variables 新增 `GEMINI_API_KEY`，Redeploy。
+4. 專案 Settings → Deployment Protection 關閉 Vercel Authentication，否則公開網站會被 401 擋住。
+5. GitHub repo → Settings → Secrets and variables → Actions → Variables 新增 `CHAT_API_URL` = `https://<專案網址>/api/chat`。
+6. 重跑 Pages 部署，首頁右下角就會出現聊天按鈕。沒設定 `CHAT_API_URL` 時完全不顯示。
+
+模型預設 `gemini-3.5-flash-lite`，可用環境變數 `GEMINI_MODEL` 覆寫。

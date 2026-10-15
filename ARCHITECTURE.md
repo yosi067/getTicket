@@ -6,6 +6,7 @@
 | --- | --- | --- |
 | Chrome 擴充功能 | `extension/` | 只服務 Ticket Plus：活動追蹤、提醒、購票頁輔助 |
 | 網頁 Demo「TicketWar Pro」 | `demo/` | 單頁 HTML：整合四個平台的活動、個人票夾、購票演練 |
+| 入口網站與客服 | `site/`、`scripts/`、`server/`、`api/` | GitHub Pages 靜態入口頁 + Gemini 客服後端，見第 9 節 |
 
 共同原則：唯讀、被動。不登入、不儲存帳號密碼、不處理驗證碼與排隊、不自動送出付款。
 
@@ -52,7 +53,11 @@ demo/
   ticketwar-lite.html     （產物）精簡版
 scripts/                   make-icons.mjs、pack.mjs
 tests/                     lib.test.mjs、sources.test.mjs 與 fixtures
-server/PLAN.md             曾評估的後端方案，已擱置
+server/                    客服機器人：chat-core.mjs（共用核心）、worker.js（Cloudflare）、site-guide.md、README.md；PLAN.md 為曾評估並擱置的後端方案
+api/chat.js                Vercel 版客服函式
+site/index.html            入口頁原始碼
+scripts/                   另含 fetch-news.mjs、site-stats.mjs、build-site.mjs
+.github/workflows/pages.yml  每日與推送時部署 GitHub Pages
 ```
 
 整個專案沒有框架與打包工具，全部是原生 ES Module。唯一的建置步驟是 `demo/build.mjs` 的字串替換。
@@ -236,3 +241,22 @@ npm run demo          # 本機伺服器（127.0.0.1:8787）；頁面「重新抓
 - 公開資料不含庫存與表演者；分類由標題推測；「熱門」為啟發式。
 - 各平台網站改版會讓轉接器或輔助選擇器失效，需人工維護。
 - 時鐘校正精度約 ±1 秒。
+
+## 9. 入口網站與客服機器人
+
+```text
+ GitHub Actions（每日 06:00 / 推送 main / 手動）
+   測試 → demo/snapshot.mjs → scripts/fetch-news.mjs → npm run site:build → 部署 Pages
+                                                          │
+                          dist-site/  index.html（入口）  app/index.html（平台）  chat-context.json
+                                                          │
+ 瀏覽器（聊天視窗）── POST /api/chat ──► Vercel 函式（或 Worker）── generateContent ──► Gemini
+                                              │ 讀 chat-context.json（快取 10 分鐘）
+```
+
+- **建置**：`scripts/build-site.mjs` 把 `site/index.html` 的佔位符換成資料（`/*__DATA__*/`、`/*__STATS__*/`）與 `CHAT_API_URL`（`/*__CHAT_URL__*/`，必須是 https），同時輸出 `app/index.html` 與 `chat-context.json`。統計函式在 `scripts/site-stats.mjs`（純函式，有測試），也被內嵌進入口頁供前端互動篩選使用。
+- **新聞**：`scripts/fetch-news.mjs` 抓 Google News RSS，先排除港澳、中國與海外來源，再要求來源名稱或網域在台灣媒體白名單內，依主題分類後寫入 `demo/data/news.json`。
+- **平台頁差異**：`demo/build.mjs` 以 `<!--LITE:OFF-->`、`<!--WEB:ON-->` 標記產生三種版本；「返回入口」按鈕只存在於網頁版。
+- **客服**：`server/chat-core.mjs` 是不含金鑰與網路的純函式（組提示詞、驗證輸入、拆追問、限流、CORS）；`api/chat.js` 與 `server/worker.js` 只負責收發與呼叫 Gemini。前端只把 https 連結轉成 `<a>`，其餘一律當純文字。
+- **安全**：金鑰只在後端環境變數；CORS 白名單；單則 300 字、最近 6 則、每 IP 每分鐘 8 次；活動資料與使用者訊息都視為資料，不當指令。
+- **資料新鮮度**：自動更新只重新部署網站，不提交回 repo；細節與指令見 [README.md](README.md)，客服設定見 [server/README.md](server/README.md)。

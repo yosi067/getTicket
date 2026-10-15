@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TicketWar Pro｜售票戰情日曆與極速搶票演練場</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  // 淺色主題：把 slate 反轉（900=頁面底、800=卡片白、700=邊框/淡底、100=主文字），所有既有 class 自動套用
+  // 品牌色 indigo 改為橘色，風格接近 Ticket Plus、KKTIX 等主流售票網站（白底、單一強調色）
+  if (window.tailwind) tailwind.config = { theme: { extend: { colors: {
+    slate: { 50: '#111111', 100: '#1f2328', 200: '#333a42', 300: '#4a525c', 400: '#5f6872', 500: '#6f7780', 600: '#d3d8de', 700: '#e5e8ec', 800: '#ffffff', 900: '#f4f5f7', 950: '#ffffff' },
+    indigo: { 300: '#c2470a', 400: '#d9480f', 500: '#f06a1d', 600: '#e8590c', 700: '#c2470a' },
+  } } } };
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  [hidden] { display: none !important; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif; }
+  .mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  @keyframes pulseRed { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.55); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
+  .urgent { animation: pulseRed 1.6s infinite; }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+  .shake { animation: shake .25s; }
+  /* 深色或飽和底色上的文字一律白色（淺色主題下預設文字為深色） */
+  [class~="bg-indigo-500"],[class~="bg-indigo-600"],[class~="bg-indigo-700"],[class~="bg-red-500"],[class~="bg-red-600"],[class~="bg-red-700"],[class~="bg-emerald-500"],[class~="bg-emerald-600"],[class~="bg-emerald-700"],[class~="bg-orange-500"],[class~="bg-orange-600"],[class~="bg-orange-700"],[class~="bg-pink-500"],[class~="bg-pink-600"],[class~="bg-pink-700"],[class~="bg-fuchsia-500"],[class~="bg-fuchsia-600"],[class~="bg-fuchsia-700"],[class~="bg-rose-500"],[class~="bg-rose-600"],[class~="bg-rose-700"],[class~="bg-sky-500"],[class~="bg-sky-600"],[class~="bg-sky-700"],[class~="bg-violet-500"],[class~="bg-violet-600"],[class~="bg-violet-700"],[class~="bg-amber-600"],[class~="bg-amber-700"] { color: #fff; }
+  [class~="bg-emerald-500"].text-neutral-900, [class~="bg-amber-500"].text-neutral-900 { color: #1a1a1a; }
+  article { box-shadow: 0 1px 3px rgba(16,24,40,.08); }
+  .clamp2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+</style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen antialiased">
+
+<header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-700 shadow-sm">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3">
+    <div class="flex items-center gap-2">
+      <i class="fa-solid fa-ticket text-indigo-500 text-xl"></i>
+      <h1 class="text-lg font-bold tracking-wide">TicketWar <span class="text-indigo-400">Pro</span></h1>
+    </div>
+    <nav class="flex gap-1 ml-2" id="tabs">
+      <button data-tab="board" class="tab px-4 py-2 rounded-lg text-sm font-semibold"><i class="fa-regular fa-calendar-days mr-1"></i>戰情日曆</button>
+      <button data-tab="wallet" class="tab px-4 py-2 rounded-lg text-sm font-semibold"><i class="fa-solid fa-ticket-simple mr-1"></i>我的票夾 <span id="walletBadge" class="ml-1 text-xs px-1.5 rounded-full bg-amber-500 text-neutral-900"></span></button>
+      <button data-tab="arena" class="tab px-4 py-2 rounded-lg text-sm font-semibold"><i class="fa-solid fa-stopwatch mr-1"></i>演練場</button>
+    </nav>
+    <div class="ml-auto flex flex-wrap items-center gap-2 text-xs text-slate-400">
+      <span id="dataInfo"></span>
+      <!--LITE:OFF--><button id="btnRefresh" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold"><i class="fa-solid fa-rotate mr-1"></i>重新抓取</button>
+      <button id="btnUpdate" class="hidden px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-semibold" title="抓取全部平台、寫入快照並重建 HTML 檔（需用 npm run demo 開啟）"><i class="fa-solid fa-floppy-disk mr-1"></i>更新並存檔</button><!--/LITE:OFF-->
+      <button id="btnReset" class="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-100">重置示範</button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 py-5">
+
+  <!-- 分頁 1：戰情日曆 -->
+  <section id="tab-board">
+    <div id="stats" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4"></div>
+
+    <div class="bg-slate-800/70 border border-slate-700 rounded-xl p-3 mb-4 flex flex-wrap gap-2 items-center">
+      <input id="fQ" type="search" placeholder="搜尋活動、場地、主辦" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm w-56 focus:outline-none focus:border-indigo-500">
+      <select id="fPlat" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-sm"></select>
+      <select id="fCat" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-sm"></select>
+      <select id="fCity" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-sm"></select>
+      <select id="fStatus" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-sm"></select>
+      <select id="fDate" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-sm" title="依資料是否提供日期篩選">
+        <option value="sale">只看有開賣日期</option>
+        <option value="time">只看有演出時間</option>
+        <option value="all">不限（含日期未提供）</option>
+      </select>
+      <select id="fMine" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-sm">
+        <option value="all">全部活動</option>
+        <option value="any">我的清單（想搶＋已購）</option>
+        <option value="want">只看想搶票</option>
+        <option value="bought">只看已購買</option>
+      </select>
+      <select id="fSort" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-sm">
+        <option value="smart">智慧排序（喜好＋熱度）</option>
+        <option value="hot">依熱門度</option>
+        <option value="time">依最近時間點</option>
+        <option value="show">依演出日期</option>
+        <option value="title">依名稱</option>
+      </select>
+      <select id="fGroup" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-sm">
+        <option value="smart">智慧分群</option>
+        <option value="none">不分群</option>
+      </select>
+      <input id="fLikes" type="text" maxlength="80" placeholder="喜好關鍵字（逗號分隔，如 YOASOBI, 五月天）" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm w-72 focus:outline-none focus:border-indigo-500">
+      <div class="inline-flex rounded-lg overflow-hidden border border-slate-700" role="group" aria-label="顯示模式">
+        <button id="vCard" class="px-3 py-2 text-sm" title="卡片模式"><i class="fa-solid fa-table-cells-large mr-1"></i>卡片</button>
+        <button id="vList" class="px-3 py-2 text-sm" title="列表模式（精簡資訊）"><i class="fa-solid fa-list mr-1"></i>列表</button>
+      </div>
+      <button id="btnClear" class="text-xs text-slate-400 hover:text-indigo-500 underline">清除篩選</button>
+      <button id="btnIcs" class="ml-auto px-3 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-neutral-900 text-sm font-bold"><i class="fa-solid fa-calendar-plus mr-1"></i>匯出我的清單 .ics</button>
+    </div>
+
+    <div id="list" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"></div>
+    <div id="empty" hidden class="text-center text-slate-400 py-16">
+      <i class="fa-regular fa-face-meh text-3xl mb-2"></i>
+      <p>沒有符合條件的活動</p>
+    </div>
+    <p class="text-xs text-slate-500 mt-6 leading-relaxed">
+      資料來自 Ticket Plus、拓元 Tixcraft、KKTIX、OPENTIX 的公開頁面（唯讀、低頻率）。分類為依標題推測；「販售期間內」僅依時間判斷，不代表一定有票。
+      Ticket Plus 提供開賣時間與票價；拓元只提供日期與場地（詳情頁有驗證，不抓取）；KKTIX 與 OPENTIX 的列表沒有開賣時間，顯示「未提供」，倒數改為距演出。
+      「熱門」與「推薦」是依場次數、票區數、票價、類型，以及你的清單與喜好關鍵字推測，並非實際銷量或排名。
+      標示「模擬」的卡片是為了示範倒數與警示而產生的情境，並非真實開賣。本工具為非官方 Demo，購票請以各平台官方網站為準。
+    </p>
+  </section>
+
+  <!-- 分頁：我的票夾 -->
+  <section id="tab-wallet" hidden>
+    <div class="flex flex-wrap items-center gap-3 mb-4">
+      <h2 class="font-bold text-lg"><i class="fa-solid fa-ticket-simple text-amber-700 mr-1"></i>我的票夾</h2>
+      <span class="text-xs text-slate-400">提醒只在這個頁面開著時生效；需要離線提醒請匯出 .ics 匯入手機行事曆。</span>
+      <button id="btnIcsWallet" class="ml-auto px-3 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-neutral-900 text-sm font-bold"><i class="fa-solid fa-calendar-plus mr-1"></i>匯出全部 .ics</button>
+    </div>
+    <h3 class="font-semibold text-emerald-700 mb-2"><i class="fa-solid fa-circle-check mr-1"></i>已購買 <span id="wBoughtN" class="text-xs text-slate-400"></span></h3>
+    <div id="wBought" class="grid gap-4 md:grid-cols-2 mb-8"></div>
+    <h3 class="font-semibold text-amber-700 mb-2"><i class="fa-solid fa-bell mr-1"></i>想搶票 <span id="wWantN" class="text-xs text-slate-400"></span></h3>
+    <div id="wWant" class="grid gap-4 md:grid-cols-2"></div>
+  </section>
+
+  <!-- 分頁 2：演練場 -->
+  <section id="tab-arena" hidden>
+    <div class="grid lg:grid-cols-3 gap-4">
+      <div class="lg:col-span-2 space-y-4">
+        <div class="bg-slate-800/70 border border-slate-700 rounded-xl p-4">
+          <div class="flex flex-wrap items-center gap-3 mb-3">
+            <h2 class="font-bold text-lg"><i class="fa-solid fa-bolt text-amber-700 mr-1"></i>極速搶票演練</h2>
+            <select id="aPlat" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-sm" title="購票流程"></select>
+            <select id="aEvent" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-sm max-w-xs"></select>
+            <select id="aArtist" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-sm"></select>
+            <label class="text-xs text-slate-300 flex items-center gap-1" title="僅拓元流程；部分活動會有粉絲驗證問題"><input id="aQuizOn" type="checkbox" checked class="accent-amber-400">拓元：加入驗證問題</label>
+          </div>
+          <div class="text-xs text-slate-400 mb-3">依所選平台的一般購票流程演練：開賣倒數 → 排隊 → 選場次／票區／票種 → 張數與驗證碼 → 選位 → 付款。選錯、驗證碼或張數不符各加 1 秒；座位可能被別人搶先選走。評級門檻依各平台流程長度而不同。</div>
+          <div class="rounded-xl bg-slate-950 border border-slate-800 p-5 min-h-[22rem]">
+            <div class="flex items-center justify-between mb-4">
+              <div id="aTarget" class="text-sm text-slate-300"></div>
+              <div id="aTimer" class="mono text-3xl font-bold text-amber-700">0.000</div>
+            </div>
+            <div id="stage"></div>
+          </div>
+          <p class="text-xs text-slate-500 mt-3">這是單機模擬器，不會連線任何售票系統，也不會自動作答或填寫真實資料。</p>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div class="bg-slate-800/70 border border-slate-700 rounded-xl p-4">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-bold"><i class="fa-solid fa-trophy text-amber-700 mr-1"></i>排行榜</h3>
+            <button id="btnClearScores" class="text-xs text-slate-400 hover:text-indigo-500 underline">清除成績</button>
+          </div>
+          <ol id="board" class="space-y-1 text-sm"></ol>
+          <h4 class="font-semibold text-sm mt-4 mb-1 text-slate-300">最近紀錄</h4>
+          <ul id="history" class="space-y-1 text-xs text-slate-400"></ul>
+        </div>
+
+        <!--LITE:OFF--><div class="bg-slate-800/70 border border-slate-700 rounded-xl p-4">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-bold"><i class="fa-solid fa-circle-question text-indigo-400 mr-1"></i>題庫</h3>
+            <button id="btnQuizReset" class="text-xs text-slate-400 hover:text-indigo-500 underline">還原預設題庫</button>
+          </div>
+          <form id="quizForm" class="space-y-2 text-sm mb-3">
+            <input type="hidden" id="qId">
+            <input id="qArtist" required maxlength="30" placeholder="藝人" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5">
+            <input id="qText" required maxlength="80" placeholder="題目" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5">
+            <input id="qRight" required maxlength="40" placeholder="正確答案" class="w-full bg-slate-900 border border-emerald-500 rounded-lg px-2 py-1.5">
+            <div class="grid grid-cols-3 gap-2">
+              <input id="qW1" required maxlength="40" placeholder="錯誤 1" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5">
+              <input id="qW2" required maxlength="40" placeholder="錯誤 2" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5">
+              <input id="qW3" required maxlength="40" placeholder="錯誤 3" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5">
+            </div>
+            <div class="flex gap-2">
+              <button class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold" id="qSubmit">新增題目</button>
+              <button type="button" id="qCancel" hidden class="px-3 py-1.5 rounded-lg bg-slate-700">取消編輯</button>
+            </div>
+          </form>
+          <ul id="quizList" class="space-y-1 max-h-72 overflow-auto pr-1 text-sm"></ul>
+        </div><!--/LITE:OFF-->
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="toasts" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
+<script>
+/*__LIB__*/
+</script>
+<script>
+'use strict';
+const SNAPSHOT = /*__SNAPSHOT__*/null;
+
+// ================= 工具 =================
+const $ = (id) => document.getElementById(id);
+function h(tag, props, ...kids) {
+  const el = document.createElement(tag);
+  const late = [];
+  for (const [k, v] of Object.entries(props || {})) {
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'text') el.textContent = v;
+    else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
+    else if (k === 'value' || k === 'checked' || k === 'disabled' || k === 'selected') late.push([k, v]);
+    else el.setAttribute(k, v === true ? '' : String(v));
+  }
+  for (const kid of kids.flat()) {
+    if (kid == null || kid === false) continue;
+    el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  }
+  for (const [k, v] of late) el[k] = v;
+  return el;
+}
+const shuffle = (a) => { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; };
+const uid = () => Math.random().toString(36).slice(2, 10);
+const money = (n) => `NT$${Number(n).toLocaleString('zh-TW')}`;
+
+function toast(msg, kind = 'info', ms = 4000) {
+  const color = kind === 'error' ? 'bg-red-600' : kind === 'warn' ? 'bg-amber-500 text-neutral-900' : 'bg-slate-700';
+  const el = h('div', { class: `${color} text-white text-sm rounded-lg shadow-lg px-4 py-2 max-w-sm`, text: msg });
+  $('toasts').append(el);
+  setTimeout(() => el.remove(), ms);
+}
+
+// ================= 儲存（含版本與驗證） =================
+const KEY = { events: 'tw.events.v2', mine: 'tw.mine.v1', fav: 'tw.fav.v1', quiz: 'tw.quiz.v1', scores: 'tw.scores.v1', ui: 'tw.ui.v1' };
+function load(key, fallback, ok) {
+  try {
+    const v = JSON.parse(localStorage.getItem(key));
+    return v != null && ok(v) ? v : fallback;
+  } catch { return fallback; }
+}
+function save(key, v) {
+  try { localStorage.setItem(key, JSON.stringify(v)); } catch { toast('瀏覽器儲存空間不足或被停用，資料無法保存', 'error'); }
+}
+const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
+const safeUrl = (u) => { try { const x = new URL(u); return x.protocol === 'https:' ? x.href : null; } catch { return null; } };
+const PLATFORMS = { ticketplus: 'Ticket Plus', tixcraft: '拓元 Tixcraft', kktix: 'KKTIX', opentix: 'OPENTIX 兩廳院' };
+const PLAT_COLOR = { ticketplus: 'bg-sky-700', tixcraft: 'bg-rose-700', kktix: 'bg-emerald-700', opentix: 'bg-violet-700' };
+const platformOf = (e) => (e.platform in PLATFORMS ? e.platform : 'ticketplus');
+const platName = (e) => PLATFORMS[platformOf(e)];
+
+// ================= 預設資料 =================
+const DEFAULT_QUIZ = [
+  ['YOASOBI', 'YOASOBI 的兩位成員是 Ayase 與誰？', 'ikura', ['Eve', 'n-buna', 'Aimer']],
+  ['YOASOBI', 'YOASOBI 出道曲《夜に駆ける》發行於哪一年？', '2019', ['2018', '2020', '2021']],
+  ['田馥甄', '田馥甄的英文藝名是？', 'Hebe', ['Selina', 'Ella', 'Jolin']],
+  ['田馥甄', '《小幸運》是哪部電影的主題曲？', '我的少女時代', ['那些年我們一起追的女孩', '後來的我們', '悲傷逆流成河']],
+  ['Vaundy', '下列哪首是 Vaundy 的歌曲？', '怪獣の花唄', ['夜に駆ける', '紅蓮華', 'Pretender']],
+  ['BABYMONSTER', 'BABYMONSTER 隸屬哪間公司？', 'YG Entertainment', ['JYP Entertainment', 'SM Entertainment', 'HYBE']],
+  ['BABYMONSTER', 'BABYMONSTER 正式出道時有幾位成員？', '7', ['5', '6', '8']],
+  ['五月天', '五月天的主唱是誰？', '阿信', ['怪獸', '石頭', '瑪莎']],
+].map(([artist, text, right, wrong]) => ({ id: uid(), artist, text, right, wrong }));
+
+const DEFAULT_AREAS = [
+  { name: '特1區', price: 6880 }, { name: '特2區', price: 5880 }, { name: '紅1區', price: 4880 },
+  { name: '黃1區', price: 3880 }, { name: '藍1區', price: 2880 }, { name: '綠1區', price: 1880 },
+];
+
+// ================= 狀態 =================
+const S = {
+  events: {}, fetchedAt: null, source: 'snapshot',
+  mine: {}, quiz: [], scores: [],
+  ui: { q: '', plat: 'all', cat: '全部', city: '全部', status: 'all', date: 'sale', mine: 'all', sort: 'smart', group: 'smart', likes: '', tab: 'board', view: 'card' },
+};
+const fired = new Set();
+
+function makeSims(events, now) {
+  const real = Object.values(events).filter((e) => !e.sim && platformOf(e) === 'ticketplus'); // 只有 Ticket Plus 有開賣時間可供示範
+  const picks = [];
+  for (const k of ['田馥甄', 'YOASOBI', 'Vaundy', 'BABYMONSTER']) {
+    const e = real.find((x) => x.category === '演唱會' && x.title.includes(k) && !picks.includes(x));
+    if (e) picks.push(e);
+  }
+  for (const e of real) { if (picks.length >= 4) break; if (e.category === '演唱會' && !picks.includes(e)) picks.push(e); }
+  for (const e of real) { if (picks.length >= 4) break; if (!picks.includes(e)) picks.push(e); }
+  const offs = [6 * 60e3, 3 * 3600e3, 20 * 3600e3, 3 * 86400e3];
+  return picks.slice(0, 4).map((e, i) => {
+    const c = structuredClone(e);
+    const st = now + offs[i];
+    const en = st + 7 * 86400e3;
+    c.eventId = `sim-${i + 1}`;
+    c.title = `【模擬開賣】${e.title}`;
+    c.sim = true;
+    c.saleStarts = [st]; c.saleStart = st; c.saleEnds = [en]; c.saleEnd = en;
+    c.sessions = (c.sessions || []).map((s) => ({ ...s, saleStart: st, saleEnd: en }));
+    c.url = null;
+    return c;
+  });
+}
+
+function applySnapshot(snap, { keepSim = false } = {}) {
+  const now = Date.now();
+  const prevSim = keepSim ? Object.values(S.events).filter((e) => e.sim) : [];
+  const events = {};
+  for (const e of snap.events) events[e.eventId] = { ...e, platform: platformOf(e) };
+  const sims = keepSim && prevSim.length ? prevSim : makeSims(events, now);
+  for (const e of sims) events[e.eventId] = e;
+  S.events = events;
+  S.fetchedAt = snap.fetchedAt;
+  S.source = snap.source || 'snapshot';
+  persistEvents();
+}
+function persistEvents() { save(KEY.events, { fetchedAt: S.fetchedAt, source: S.source, events: S.events }); }
+
+function init() {
+  const cached = load(KEY.events, null, (v) => isObj(v) && isObj(v.events) && Object.keys(v.events).length > 0);
+  if (cached) { S.events = cached.events; S.fetchedAt = cached.fetchedAt; S.source = cached.source || 'snapshot'; }
+  else if (SNAPSHOT) applySnapshot(SNAPSHOT);
+  const mine = load(KEY.mine, null, isObj);
+  if (mine) S.mine = mine;
+  else {
+    // 舊版「收藏」轉為「想搶票」
+    const oldFav = load(KEY.fav, {}, isObj);
+    for (const id of Object.keys(oldFav)) if (S.events[id]) S.mine[id] = { status: 'want', at: oldFav[id]?.at ?? Date.now(), snap: snapOf(S.events[id]) };
+    save(KEY.mine, S.mine);
+  }
+  S.quiz = load(KEY.quiz, null, (v) => Array.isArray(v) && v.length > 0 && v.every((q) => q && q.text && q.right && Array.isArray(q.wrong))) || DEFAULT_QUIZ;
+  S.scores = load(KEY.scores, [], Array.isArray);
+  const ui = load(KEY.ui, null, isObj);
+  if (ui) Object.assign(S.ui, ui);
+  if (!['board', 'wallet', 'arena'].includes(S.ui.tab)) S.ui.tab = 'board';
+  if (!['sale', 'time', 'all'].includes(S.ui.date)) S.ui.date = 'sale';
+  if (!['all', 'any', 'want', 'bought'].includes(S.ui.mine)) S.ui.mine = 'all';
+  if (!['smart', 'hot', 'time', 'show', 'title'].includes(S.ui.sort)) S.ui.sort = 'smart';
+  if (!['smart', 'none'].includes(S.ui.group)) S.ui.group = 'smart';
+  if (typeof S.ui.likes !== 'string') S.ui.likes = '';
+  if (!['card', 'list'].includes(S.ui.view)) S.ui.view = 'card';
+  save(KEY.quiz, S.quiz);
+}
+
+// ================= 時間點 / 狀態 =================
+function targetOf(ev, now) {
+  const ns = nextSaleStart(ev, now);
+  if (ns) return { kind: 'open', t: ns, label: '開賣倒數' };
+  if (ev.saleEnd && ev.saleEnd > now) return { kind: 'close', t: ev.saleEnd, label: '販售截止' };
+  if (ev.startsAt && ev.startsAt > now) return { kind: 'show', t: ev.startsAt, label: '距演出' };
+  return null;
+}
+const DAY = 86400e3;
+const priceText = (ev) => {
+  if (!(ev.priceMax > 0)) return '價格未公布';
+  const lo = ev.priceMin > 0 ? ev.priceMin : ev.priceMax;
+  return lo === ev.priceMax ? money(lo) : `${money(lo)} – ${money(ev.priceMax)}`;
+};
+
+// 複製活動重點（可直接貼給朋友）
+async function copyShare(ev) {
+  const now = Date.now();
+  const text = formatShareText(ev, { platform: platName(ev), price: priceText(ev), status: STATUS_LABEL[saleStatus(ev, now)], now });
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const ta = h('textarea', { style: 'position:fixed;opacity:0' });
+    ta.value = text;
+    document.body.append(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch { /* 無法複製 */ }
+    ta.remove();
+    if (!ok) { toast('無法自動複製，請手動選取文字', 'warn'); return; }
+  }
+  toast('已複製活動重點，可直接貼給朋友');
+}
+
+// ================= 戰情日曆 =================
+const cdNodes = []; // { el, ev, card }
+
+function populateFilters() {
+  const evs = Object.values(S.events);
+  const plats = Object.keys(PLATFORMS).filter((p) => evs.some((e) => platformOf(e) === p));
+  if (S.ui.plat !== 'all' && !plats.includes(S.ui.plat)) S.ui.plat = 'all';
+  const cats = ['全部', ...CATEGORIES.filter((c) => evs.some((e) => e.category === c))];
+  const cities = ['全部', ...[...new Set(evs.flatMap((e) => e.cities || []))].sort()];
+  const fill = (sel, items, cur, label = (x) => x) => {
+    sel.replaceChildren(...items.map(([v, t]) => h('option', { value: v, selected: v === cur }, t ?? label(v))));
+  };
+  fill($('fPlat'), [['all', '全部平台'], ...plats.map((p) => [p, `${PLATFORMS[p]}（${evs.filter((e) => platformOf(e) === p && !e.sim).length}）`])], S.ui.plat);
+  fill($('fCat'), cats.map((c) => [c]), S.ui.cat);
+  fill($('fCity'), cities.map((c) => [c]), S.ui.city);
+  fill($('fStatus'), [['all', '全部狀態'], ['sim', '只看模擬'], ...['onsale', 'upcoming', 'ended', 'past', 'unknown'].map((k) => [k, STATUS_LABEL[k]])], S.ui.status);
+  $('fQ').value = S.ui.q; $('fSort').value = S.ui.sort; $('fDate').value = S.ui.date; $('fMine').value = S.ui.mine; $('fGroup').value = S.ui.group; $('fLikes').value = S.ui.likes;
+}
+
+// ---------- 喆好與熱度（推測，非實際銷量） ----------
+const REC = 2.5;
+let CTX = null;
+
+function buildCtx() {
+  const cat = {}, city = {}, plat = {};
+  let tot = 0;
+  for (const m of Object.values(S.mine)) {
+    const w = m.status === 'bought' ? 3 : 2;
+    const sn = m.snap || {};
+    if (sn.category) cat[sn.category] = (cat[sn.category] || 0) + w;
+    if (sn.city) city[sn.city] = (city[sn.city] || 0) + w;
+    if (sn.platform) plat[sn.platform] = (plat[sn.platform] || 0) + w;
+    tot += w;
+  }
+  const kws = [...new Set(S.ui.likes.split(/[,，、;\s]+/).map((s) => s.trim().toLowerCase()).filter((s) => s.length >= 2))];
+  const prefCache = new Map();
+  const popCache = new Map();
+  const pref = (ev) => {
+    if (prefCache.has(ev.eventId)) return prefCache.get(ev.eventId);
+    const hay = [ev.title, ...(ev.organizers || []).map((o) => (typeof o === 'string' ? o : o?.name ?? ''))].join(' ').toLowerCase();
+    let s = 0;
+    const why = [];
+    const hit = kws.filter((k) => hay.includes(k));
+    if (hit.length) { s += 6 + Math.min(hit.length - 1, 2); why.push(`符合關鍵字「${hit[0]}」`); }
+    if (tot) {
+      const c = (cat[ev.category] || 0) / tot;
+      if (c > 0) { s += c * 3; why.push(`你常關注${ev.category}`); }
+      const ci = (city[(ev.cities || [])[0]] || 0) / tot;
+      if (ci > 0) { s += ci; why.push(`常關注${ev.cities[0]}的活動`); }
+      s += ((plat[platformOf(ev)] || 0) / tot) * 0.5;
+    }
+    const r = { s, why };
+    prefCache.set(ev.eventId, r);
+    return r;
+  };
+  const pop = (ev) => {
+    if (popCache.has(ev.eventId)) return popCache.get(ev.eventId);
+    let s = Math.min((ev.sessions || []).length, 8) * 1.5 + Math.min((ev.areas || []).length, 12) * 0.6;
+    if (ev.priceMax >= 5000) s += 3; else if (ev.priceMax >= 3000) s += 2; else if (ev.priceMax >= 1500) s += 1;
+    if (ev.category === '演唱會' || ev.category === '音樂祭') s += 2; else if (ev.category === '見面會') s += 1;
+    popCache.set(ev.eventId, s);
+    return s;
+  };
+  const all = Object.values(S.events).map(pop).sort((a, b) => a - b);
+  const hotCut = Math.max(all.length ? all[Math.floor(all.length * 0.8)] : Infinity, 3);
+  return { pref, pop, hotCut };
+}
+
+const GROUP_TITLE = ['24 小時內開賣', '為你推薦', '熱門活動（推測）', '其他活動'];
+function groupOf(ev, now) {
+  const tg = targetOf(ev, now);
+  if (tg && tg.kind === 'open' && tg.t - now <= DAY) return 0;
+  if (CTX.pref(ev).s >= REC) return 1;
+  if (CTX.pop(ev) >= CTX.hotCut) return 2;
+  return 3;
+}
+
+const hasSaleDate = (e) => (e.saleStarts || []).length > 0 || e.saleStart != null;
+
+function filtered(now) {
+  CTX = buildCtx();
+  const q = S.ui.q.trim().toLowerCase();
+  let list = Object.values(S.events).filter((e) => {
+    if (S.ui.date === 'sale' && !hasSaleDate(e)) return false;
+    if (S.ui.date === 'time' && (e.startsAt == null || e.dateOnly)) return false;
+    const mine = S.mine[e.eventId];
+    if (S.ui.mine === 'any' && !mine) return false;
+    if ((S.ui.mine === 'want' || S.ui.mine === 'bought') && mine?.status !== S.ui.mine) return false;
+    if (S.ui.plat !== 'all' && platformOf(e) !== S.ui.plat) return false;
+    if (S.ui.cat !== '全部' && e.category !== S.ui.cat) return false;
+    if (S.ui.city !== '全部' && !(e.cities || []).includes(S.ui.city)) return false;
+    if (S.ui.status === 'sim') { if (!e.sim) return false; }
+    else if (S.ui.status !== 'all' && saleStatus(e, now) !== S.ui.status) return false;
+    if (q) {
+      const hay = [e.title, platName(e), ...(e.venues || []), ...(e.organizers || []).map((o) => (typeof o === 'string' ? o : o?.name ?? ''))].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  const t = (e) => targetOf(e, now)?.t ?? Infinity;
+  const byTime = (a, b) => t(a) - t(b) || a.title.localeCompare(b.title);
+  if (S.ui.sort === 'smart') list.sort((a, b) => CTX.pref(b).s - CTX.pref(a).s || CTX.pop(b) - CTX.pop(a) || byTime(a, b));
+  else if (S.ui.sort === 'hot') list.sort((a, b) => CTX.pop(b) - CTX.pop(a) || byTime(a, b));
+  else if (S.ui.sort === 'time') list.sort(byTime);
+  else if (S.ui.sort === 'show') list.sort((a, b) => (a.startsAt ?? Infinity) - (b.startsAt ?? Infinity));
+  else list.sort((a, b) => a.title.localeCompare(b.title, 'zh-Hant'));
+  return list;
+}
+
+function card(ev, now) {
+  const st = saleStatus(ev, now);
+  const tg = targetOf(ev, now);
+  const urgent = tg && tg.kind === 'open' && tg.t - now <= DAY;
+  const closing = tg && tg.kind === 'close' && tg.t - now <= DAY;
+  const mine = S.mine[ev.eventId];
+  const pr = CTX.pref(ev);
+  const hot = CTX.pop(ev) >= CTX.hotCut;
+  const img = safeUrl(ev.image);
+  const link = safeUrl(ev.url);
+  const border = mine?.status === 'bought' ? 'border-emerald-500' : urgent ? 'border-red-500 urgent' : closing ? 'border-amber-500' : 'border-slate-700';
+  const cd = h('span', { class: 'mono font-bold text-lg' });
+  const root = h('article', { class: `bg-slate-800/80 border-2 ${border} rounded-xl overflow-hidden flex flex-col` },
+    h('div', { class: 'relative h-32 bg-slate-900' },
+      img ? h('img', { src: img, alt: '', loading: 'lazy', class: 'w-full h-full object-cover opacity-80', referrerpolicy: 'no-referrer', onerror: (e) => e.target.remove() }) : null,
+      h('div', { class: 'absolute top-2 left-2 flex gap-1 flex-wrap' },
+        h('span', { class: 'text-xs px-2 py-0.5 rounded bg-indigo-600', text: ev.category }),
+        h('span', { class: `text-xs px-2 py-0.5 rounded ${PLAT_COLOR[platformOf(ev)]}`, text: platName(ev) }),
+        ev.sim ? h('span', { class: 'text-xs px-2 py-0.5 rounded bg-fuchsia-600', text: '模擬' }) : null,
+        hot ? h('span', { class: 'text-xs px-2 py-0.5 rounded bg-orange-600', title: '依場次、票區、票價與類型推測，非實際銷量', text: '熱門' }) : null,
+        pr.s >= REC ? h('span', { class: 'text-xs px-2 py-0.5 rounded bg-pink-600', title: pr.why.join('；'), text: '推薦' }) : null,
+        urgent ? h('span', { class: 'text-xs px-2 py-0.5 rounded bg-red-600 font-bold', text: '24H 內開賣' }) : null,
+        closing ? h('span', { class: 'text-xs px-2 py-0.5 rounded bg-amber-500 text-neutral-900 font-bold', text: '即將截止' }) : null),
+      h('div', { class: 'absolute top-2 right-2 flex gap-1' },
+        h('button', {
+          class: `h-8 px-2 rounded-full text-xs font-semibold ${mine?.status === 'want' ? 'bg-amber-400 text-neutral-900' : 'bg-white/90 text-slate-300 shadow-sm hover:text-amber-700'}`,
+          title: mine?.status === 'want' ? '取消想搶票' : '加入想搶票（開賣前提醒）',
+          onclick: () => toggleWant(ev.eventId),
+        }, h('i', { class: 'fa-solid fa-bell mr-1' }), '想搶'),
+        h('button', {
+          class: `h-8 px-2 rounded-full text-xs font-semibold ${mine?.status === 'bought' ? 'bg-emerald-500 text-neutral-900' : 'bg-white/90 text-slate-300 shadow-sm hover:text-emerald-700'}`,
+          title: mine?.status === 'bought' ? '編輯已購資料' : '標記已購買（填座位、設定提醒與注意事項）',
+          onclick: () => openTicketModal(ev.eventId),
+        }, h('i', { class: 'fa-solid fa-ticket mr-1' }), '已購'))),
+    h('div', { class: 'p-3 flex-1 flex flex-col gap-1.5' },
+      h('h3', { class: 'font-semibold leading-snug clamp2', title: ev.title, text: ev.title }),
+      h('div', { class: 'text-xs text-slate-400' }, h('i', { class: 'fa-solid fa-location-dot mr-1' }), (ev.venues || []).slice(0, 2).join('、') || '地點未提供'),
+      h('div', { class: 'text-xs text-slate-400' }, h('i', { class: 'fa-regular fa-clock mr-1' }), ev.dateStart ? (ev.dateStart === ev.dateEnd ? ev.dateStart : `${ev.dateStart} ~ ${ev.dateEnd}`) : '演出日期未提供'),
+      h('div', { class: 'text-xs text-slate-400' }, h('i', { class: 'fa-solid fa-tag mr-1' }), priceText(ev)),
+      h('div', { class: 'mt-1 flex items-baseline justify-between gap-2' },
+        h('span', { class: 'text-xs text-slate-400', text: tg ? (tg.kind === 'show' && ev.dateOnly ? '距演出日' : tg.label) : STATUS_LABEL[st] }),
+        tg ? cd : h('span', { class: 'text-sm text-slate-500', text: '—' })),
+      h('div', { class: 'text-xs text-slate-500', text: `${STATUS_LABEL[st]}${ev.saleStart ? `｜開賣 ${formatDateTime(ev.saleStart)}` : ''}` })),
+    h('div', { class: 'p-3 pt-0 flex gap-2 text-sm' },
+      link ? h('a', { href: link, target: '_blank', rel: 'noopener noreferrer', class: 'flex-1 text-center px-2 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold' }, '官方購票頁 ', h('i', { class: 'fa-solid fa-arrow-up-right-from-square text-xs' }))
+        : h('span', { class: 'flex-1 text-center px-2 py-1.5 rounded-lg bg-slate-700 text-slate-400', text: '模擬活動' }),
+      h('button', { class: 'px-2 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-semibold', title: '用這場活動進行演練', onclick: () => { A.eventId = ev.eventId; A.plat = platformOf(ev); setTab('arena'); } }, h('i', { class: 'fa-solid fa-bullseye mr-1' }), '演練'),
+      h('button', { class: 'px-2 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600', title: '複製活動重點（可貼給朋友）', onclick: () => copyShare(ev) }, h('i', { class: 'fa-regular fa-copy' })),
+      h('button', { class: 'px-2 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600', title: '下載此活動 .ics', onclick: () => exportOne(ev) }, h('i', { class: 'fa-solid fa-calendar-plus' }))));
+  cdNodes.push({ el: cd, ev, t: tg ? tg.t : null });
+  return root;
+}
+
+function listRow(ev, now) {
+  const st = saleStatus(ev, now);
+  const tg = targetOf(ev, now);
+  const urgent = tg && tg.kind === 'open' && tg.t - now <= DAY;
+  const mine = S.mine[ev.eventId];
+  const link = safeUrl(ev.url);
+  const cd = h('span', { class: 'mono font-bold' });
+  const tag = (cls, text, t) => h('span', { class: `text-xs px-1.5 py-0.5 rounded ${cls}`, title: t, text });
+  const name = link
+    ? h('a', { href: link, target: '_blank', rel: 'noopener noreferrer', class: 'hover:underline clamp2', title: ev.title, text: ev.title })
+    : h('span', { class: 'clamp2', title: ev.title, text: ev.title });
+  const tr = h('tr', { class: `border-b border-slate-800 hover:bg-slate-800/60 ${mine?.status === 'bought' ? 'bg-emerald-50' : ''} ${urgent ? 'urgent' : ''}` },
+    h('td', { class: 'px-2 py-1.5 whitespace-nowrap' }, tg ? cd : h('span', { class: 'text-slate-500', text: '—' }),
+      h('div', { class: 'text-xs text-slate-500', text: tg ? (tg.kind === 'show' && ev.dateOnly ? '距演出日' : tg.label) : STATUS_LABEL[st] })),
+    h('td', { class: 'px-2 py-1.5 min-w-[16rem]' }, name,
+      h('div', { class: 'flex gap-1 mt-0.5 flex-wrap' },
+        tag('bg-indigo-600', ev.category),
+        ev.sim ? tag('bg-fuchsia-600', '模擬') : null,
+        CTX.pop(ev) >= CTX.hotCut ? tag('bg-orange-600', '熱門', '推測，非實際銷量') : null,
+        CTX.pref(ev).s >= REC ? tag('bg-pink-600', '推薦', CTX.pref(ev).why.join('；')) : null,
+        h('span', { class: 'text-xs text-slate-500', text: ev.dateStart ? (ev.dateStart === ev.dateEnd ? ev.dateStart : `${ev.dateStart} ~ ${ev.dateEnd}`) : '' }))),
+    h('td', { class: 'px-2 py-1.5 whitespace-nowrap' }, tag(PLAT_COLOR[platformOf(ev)], SHORT[platformOf(ev)])),
+    h('td', { class: 'px-2 py-1.5 text-slate-300 max-w-[12rem] truncate', title: (ev.venues || []).join('、'), text: (ev.venues || [])[0] || '—' }),
+    h('td', { class: 'px-2 py-1.5 whitespace-nowrap text-slate-300', text: ev.priceMax > 0 ? (ev.priceMin > 0 && ev.priceMin !== ev.priceMax ? `${money(ev.priceMin)}起` : money(ev.priceMax)) : '—' }),
+    h('td', { class: 'px-2 py-1.5 whitespace-nowrap' },
+      h('button', { class: 'h-7 px-2 mr-1 rounded text-xs bg-slate-700 text-slate-300 hover:text-indigo-400', title: '複製活動重點', onclick: () => copyShare(ev) }, h('i', { class: 'fa-regular fa-copy' })),
+      h('button', {
+        class: `h-7 px-2 mr-1 rounded text-xs font-semibold ${mine?.status === 'want' ? 'bg-amber-400 text-neutral-900' : 'bg-slate-700 text-slate-300 hover:text-amber-700'}`,
+        title: mine?.status === 'want' ? '取消想搶票' : '加入想搶票', onclick: () => toggleWant(ev.eventId),
+      }, h('i', { class: 'fa-solid fa-bell' })),
+      h('button', {
+        class: `h-7 px-2 rounded text-xs font-semibold ${mine?.status === 'bought' ? 'bg-emerald-500 text-neutral-900' : 'bg-slate-700 text-slate-300 hover:text-emerald-700'}`,
+        title: mine?.status === 'bought' ? '編輯已購資料' : '標記已購買', onclick: () => openTicketModal(ev.eventId),
+      }, h('i', { class: 'fa-solid fa-ticket' }))));
+  cdNodes.push({ el: cd, ev, t: tg ? tg.t : null });
+  return tr;
+}
+
+function renderBoard() {
+  const now = Date.now();
+  cdNodes.length = 0;
+  const list = filtered(now);
+  const isList = S.ui.view === 'list';
+  const on = 'px-3 py-2 text-sm bg-indigo-600 text-white', off = 'px-3 py-2 text-sm bg-slate-800 text-slate-300 hover:bg-slate-700';
+  $('vCard').className = isList ? off : on; $('vList').className = isList ? on : off;
+  const frag = document.createDocumentFragment();
+  const tbody = h('tbody', {});
+  const add = (ev) => { try { (isList ? tbody : frag).append(isList ? listRow(ev, now) : card(ev, now)); } catch (e) { console.error(ev.eventId, e); } };
+  const head = (text) => (isList
+    ? tbody.append(h('tr', {}, h('td', { colspan: '6', class: 'pt-3 pb-1 text-sm font-semibold text-slate-300 border-b border-slate-700', text })))
+    : frag.append(h('h3', { class: 'col-span-full mt-2 text-sm font-semibold text-slate-300 border-b border-slate-700 pb-1', text })));
+  if (S.ui.group === 'smart') {
+    const buckets = [[], [], [], []];
+    for (const ev of list) buckets[groupOf(ev, now)].push(ev);
+    buckets[0].sort((a, b) => (targetOf(a, now)?.t ?? Infinity) - (targetOf(b, now)?.t ?? Infinity));
+    buckets.forEach((items, i) => {
+      if (!items.length) return;
+      head(`${GROUP_TITLE[i]}（${items.length}）`);
+      items.forEach(add);
+    });
+  } else list.forEach(add);
+  if (isList) {
+    frag.append(h('div', { class: 'col-span-full overflow-x-auto' }, h('table', { class: 'w-full text-sm', 'data-view': 'list' },
+      h('thead', {}, h('tr', { class: 'text-xs text-slate-400 text-left' }, ['倒數', '活動', '平台', '地點', '票價', '我的'].map((t) => h('th', { class: 'px-2 py-1 font-normal', text: t })))),
+      tbody)));
+  }
+  $('list').replaceChildren(frag);
+  $('empty').hidden = list.length > 0;
+  renderStats(now);
+  tick();
+}
+
+function renderStats(now) {
+  const evs = Object.values(S.events);
+  const soon = evs.filter((e) => { const t = targetOf(e, now); return t && t.kind === 'open' && t.t - now <= DAY; }).length;
+  const items = [
+    ['活動總數', evs.length, 'fa-list', 'text-indigo-300'],
+    ['24 小時內開賣', soon, 'fa-bell', soon ? 'text-red-600' : 'text-slate-300'],
+    ['想搶票／已購買', `${Object.values(S.mine).filter((m) => m.status === 'want').length}／${Object.values(S.mine).filter((m) => m.status === 'bought').length}`, 'fa-ticket', 'text-amber-700'],
+    ['目前顯示', filtered(now).length, 'fa-filter', 'text-emerald-700'],
+  ];
+  $('stats').replaceChildren(...items.map(([t, n, ic, c]) => h('div', { class: 'bg-slate-800/70 border border-slate-700 rounded-xl px-4 py-3' },
+    h('div', { class: 'text-xs text-slate-400' }, h('i', { class: `fa-solid ${ic} mr-1` }), t),
+    h('div', { class: `text-2xl font-bold ${c}`, text: String(n) }))));
+}
+
+function tick() {
+  const now = Date.now();
+  let needRerender = false;
+  for (const n of cdNodes) {
+    if (n.t == null) continue;
+    if (now >= n.t) { needRerender = true; continue; } // 時間點已到，狀態改變，重畫卡片
+    const tg = targetOf(n.ev, now);
+    n.el.textContent = formatCountdown(n.t - now);
+    n.el.className = `mono font-bold text-lg ${tg && tg.kind === 'open' && n.t - now <= DAY ? 'text-red-600' : tg && tg.kind === 'close' && n.t - now <= DAY ? 'text-amber-700' : 'text-slate-100'}`;
+    // 跨過 24 小時門檻時重畫以更新紅框
+    if (tg && tg.kind !== 'show' && n.t - now <= DAY && !n.el.dataset.urgentSeen) {
+      n.el.dataset.urgentSeen = '1';
+      if (n.t - now > DAY - 2000) needRerender = true;
+    }
+  }
+  checkReminders(now);
+  checkBoughtReminders(now);
+  for (const n of walletNodes) n.el.textContent = n.t > now ? formatCountdown(n.t - now) : '已開演';
+  if (needRerender) renderBoard();
+}
+
+function checkReminders(now) {
+  const marks = [[3600e3, '1 小時'], [600e3, '10 分鐘'], [60e3, '1 分鐘'], [0, '即將開賣']];
+  for (const [id, m] of Object.entries(S.mine)) {
+    if (m.status !== 'want') continue;
+    const ev = S.events[id];
+    if (!ev) continue;
+    const tg = targetOf(ev, now);
+    if (!tg || tg.kind !== 'open') continue;
+    const remain = tg.t - now;
+    // 目前所在的區間：remain <= ms 的最小 ms
+    let cur = null;
+    for (const [ms, label] of marks) if (remain <= ms && ms > 0) cur = [ms, label];
+    if (remain <= 1000) cur = [0, '即將開賣'];
+    if (!cur) continue;
+    const key = `${id}|${tg.t}|${cur[0]}`;
+    if (fired.has(key)) continue;
+    for (const [ms] of marks) if (ms >= cur[0]) fired.add(`${id}|${tg.t}|${ms}`);
+    const msg = cur[0] === 0 ? `${ev.title} 即將開賣！` : `${ev.title} 將於 ${cur[1]}內開賣`;
+    toast(msg, 'warn', 8000);
+    try { if ('Notification' in window && Notification.permission === 'granted') new Notification('開賣提醒', { body: msg }); } catch { /* 忽略 */ }
+  }
+}
+
+// ================= 我的清單：想搶票 / 已購買 =================
+const REMIND_OPTS = [[1440, '1 天前'], [180, '3 小時前'], [60, '1 小時前'], [30, '30 分鐘前']];
+const CHECK_OPTS = ['攜帶實名證件（與購票姓名相符）', '電子票／QR Code 事先截圖備用', '提前 30 分鐘到場', '禁止攝影、錄音與閃光燈', '確認交通與停車', '手機電量與行動電源', '確認退換票截止日'];
+const saveMine = () => save(KEY.mine, S.mine);
+
+function snapOf(ev) {
+  return {
+    title: ev.title, platform: platformOf(ev), category: ev.category, city: (ev.cities || [])[0] || null,
+    venue: (ev.venues || [])[0] || '', startsAt: ev.startsAt ?? null, dateOnly: !!ev.dateOnly,
+    url: safeUrl(ev.url), saleStarts: ev.saleStarts || [],
+  };
+}
+// 活動不在目前資料中（例如已下架）時，改用加入清單時保存的摘要
+function dispOf(id) {
+  if (S.events[id]) return S.events[id];
+  const m = S.mine[id];
+  if (!m?.snap) return null;
+  const sn = m.snap;
+  return { eventId: id, ...sn, venues: sn.venue ? [sn.venue] : [], cities: sn.city ? [sn.city] : [], saleEnd: null, sessions: [] };
+}
+function askNotif() {
+  try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch { /* 忽略 */ }
+}
+function refreshAll() { renderBoard(); renderWallet(); }
+
+function toggleWant(id) {
+  const ev = S.events[id];
+  if (!ev) return;
+  const cur = S.mine[id];
+  if (cur?.status === 'want') delete S.mine[id];
+  else {
+    if (cur?.status === 'bought' && !confirm('這場已標記為「已購買」。改成「想搶票」會清除座位、提醒與注意事項。確定嗎？')) return;
+    S.mine[id] = { status: 'want', at: Date.now(), snap: snapOf(ev) };
+    askNotif();
+    if (!(ev.saleStarts || []).some((t) => t > Date.now())) toast('這場沒有未來的開賣時間，不會有開賣提醒；買到票後可按「已購」設定演出提醒。', 'warn', 7000);
+  }
+  saveMine();
+  refreshAll();
+}
+
+function removeMine(id) {
+  if (!S.mine[id]) return;
+  if (!confirm('從我的清單移除這場活動？')) return;
+  delete S.mine[id];
+  saveMine();
+  refreshAll();
+}
+
+const toLocalInput = (ms) => {
+  if (ms == null) return '';
+  const d = new Date(ms);
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+
+function openTicketModal(id) {
+  const ev = dispOf(id);
+  if (!ev) return;
+  const cur = S.mine[id]?.status === 'bought' ? S.mine[id] : null;
+  const inputCls = 'w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-sm';
+  const defShow = cur ? cur.showAt : (ev.startsAt != null && !ev.dateOnly ? ev.startsAt : null);
+  const seat = h('input', { type: 'text', maxlength: '80', value: cur?.seat || '', placeholder: '例：紅1區 12排 05號', class: inputCls });
+  const qty = h('input', { type: 'number', min: '1', max: '20', value: String(cur?.qty || 1), class: inputCls });
+  const showAt = h('input', { type: 'datetime-local', value: toLocalInput(defShow), class: inputCls });
+  const rem = REMIND_OPTS.map(([m, label]) => ({ m, el: h('input', { type: 'checkbox', class: 'accent-amber-400', checked: (cur?.remind ?? [1440, 60]).includes(m) }), label }));
+  const chk = CHECK_OPTS.map((label) => ({ label, el: h('input', { type: 'checkbox', class: 'accent-amber-400', checked: (cur?.checks ?? CHECK_OPTS.slice(0, 3)).includes(label) }) }));
+  const note = h('textarea', { rows: '3', maxlength: '300', class: inputCls, placeholder: '自訂注意事項（最多 300 字）' });
+  note.value = cur?.note || '';
+  const close = () => { overlay.remove(); document.removeEventListener('keydown', onKey); };
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  const row = (label, el, hint) => h('label', { class: 'block text-sm' }, h('span', { class: 'text-slate-300 block mb-1', text: label }), el, hint ? h('span', { class: 'text-xs text-slate-500', text: hint }) : null);
+  const checkRow = (o, label) => h('label', { class: 'flex items-center gap-2 text-sm' }, o.el, label);
+  const save_ = () => {
+    const t = showAt.value ? new Date(showAt.value).getTime() : null;
+    if (showAt.value && !Number.isFinite(t)) { toast('演出時間格式不正確', 'warn'); return; }
+    const remind = rem.filter((r) => r.el.checked).map((r) => r.m).sort((a, b) => b - a);
+    if (remind.length && t == null) { toast('請填入演出時間，才能設定演出提醒', 'warn'); return; }
+    const q = Math.min(20, Math.max(1, Math.round(Number(qty.value)) || 1));
+    S.mine[id] = {
+      status: 'bought', at: cur?.at ?? Date.now(), snap: S.events[id] ? snapOf(S.events[id]) : S.mine[id]?.snap ?? snapOf(ev),
+      seat: seat.value.trim(), qty: q, showAt: t, remind, checks: chk.filter((c) => c.el.checked).map((c) => c.label),
+      note: note.value.trim(), fired: [],
+    };
+    askNotif();
+    saveMine();
+    close();
+    refreshAll();
+    toast('已存入我的票夾');
+  };
+  const overlay = h('div', { class: 'fixed inset-0 z-40 bg-black/70 flex items-center justify-center p-4', onclick: (e) => { if (e.target === overlay) close(); } },
+    h('div', { class: 'w-full max-w-lg max-h-[90vh] overflow-auto bg-slate-800 border border-slate-600 rounded-xl p-5 space-y-3', role: 'dialog', 'aria-modal': 'true' },
+      h('h3', { class: 'font-bold text-lg', text: cur ? '編輯已購票券' : '標記已購買' }),
+      h('div', { class: 'text-sm text-slate-300', text: ev.title }),
+      row('座位', seat),
+      row('張數', qty),
+      row('演出時間（用於提醒）', showAt, ev.dateOnly && !cur ? '這個平台只提供日期，請自行填入演出時間' : ''),
+      h('div', { class: 'text-sm' }, h('div', { class: 'text-slate-300 mb-1', text: '演出前提醒' }), h('div', { class: 'flex flex-wrap gap-x-4 gap-y-1' }, rem.map((r) => checkRow(r, r.label)))),
+      h('div', { class: 'text-sm' }, h('div', { class: 'text-slate-300 mb-1', text: '注意事項（提醒時會一併顯示）' }), h('div', { class: 'space-y-1' }, chk.map((c) => checkRow(c, c.label)))),
+      row('備註', note),
+      h('div', { class: 'flex gap-2 pt-1' },
+        h('button', { class: 'px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-semibold', onclick: save_ }, '儲存'),
+        h('button', { class: 'px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600', onclick: close }, '取消'),
+        cur ? h('button', { class: 'ml-auto px-4 py-2 rounded-lg bg-red-700 hover:bg-red-600', onclick: () => { close(); removeMine(id); } }, '移除') : null)));
+  document.body.append(overlay);
+  document.addEventListener('keydown', onKey);
+  seat.focus();
+}
+
+// 已購票券的演出前提醒：只觸發目前所在的最小區間，選項越大的視為已提醒
+function checkBoughtReminders(now) {
+  let changed = false;
+  for (const [id, m] of Object.entries(S.mine)) {
+    if (m.status !== 'bought' || m.showAt == null || !m.remind?.length) continue;
+    const remain = m.showAt - now;
+    if (remain <= 0) continue;
+    const inWindow = m.remind.filter((min) => remain <= min * 60e3);
+    if (!inWindow.length) continue;
+    const cur = Math.min(...inWindow);
+    const fired = m.fired || (m.fired = []);
+    if (fired.includes(cur)) continue;
+    for (const min of m.remind) if (min >= cur && !fired.includes(min)) fired.push(min);
+    changed = true;
+    const ev = dispOf(id);
+    const parts = [`${ev?.title ?? m.snap?.title ?? ''} 約 ${formatMinutes(Math.max(1, Math.round(remain / 60e3)))}後開演`];
+    if (m.seat) parts.push(`座位：${m.seat}`);
+    if (m.checks?.length) parts.push(`注意：${m.checks.join('、')}`);
+    if (m.note) parts.push(m.note);
+    const msg = parts.join('｜');
+    toast(msg, 'warn', 20000);
+    try { if ('Notification' in window && Notification.permission === 'granted') new Notification('演出提醒', { body: msg }); } catch { /* 忽略 */ }
+  }
+  if (changed) saveMine();
+}
+
+// ---------- 票夾分頁 ----------
+const walletNodes = []; // { el, t }
+const fmtShow = (ev, m) => (m?.showAt != null ? formatDateTime(m.showAt) : ev.startsAt != null ? (ev.dateOnly ? new Date(ev.startsAt).toLocaleDateString('zh-TW') : formatDateTime(ev.startsAt)) : '演出時間未填');
+
+function walletCard(id, m, ev, now) {
+  const bought = m.status === 'bought';
+  const cd = h('span', { class: 'mono font-bold text-lg text-slate-100' });
+  let cdT = null;
+  let cdLabel = '';
+  if (bought) { cdT = m.showAt ?? null; cdLabel = '距演出'; } else {
+    const tg = targetOf(ev, now);
+    if (tg) { cdT = tg.t; cdLabel = tg.label; }
+  }
+  if (cdT != null && cdT > now) walletNodes.push({ el: cd, t: cdT });
+  const link = safeUrl(ev.url);
+  return h('article', { class: `bg-slate-800/80 border-2 ${bought ? 'border-emerald-600' : 'border-amber-600'} rounded-xl p-4 space-y-1.5` },
+    h('div', { class: 'flex items-start gap-2' },
+      h('h4', { class: 'font-semibold leading-snug flex-1', text: ev.title }),
+      h('span', { class: `text-xs px-2 py-0.5 rounded ${PLAT_COLOR[platformOf(ev)]}`, text: platName(ev) })),
+    h('div', { class: 'text-xs text-slate-400' }, h('i', { class: 'fa-regular fa-clock mr-1' }), fmtShow(ev, m), ev.venues?.[0] ? ` ・ ${ev.venues[0]}` : ''),
+    cdT != null && cdT > now ? h('div', { class: 'flex items-baseline justify-between' }, h('span', { class: 'text-xs text-slate-400', text: cdLabel }), cd) : null,
+    bought ? h('div', { class: 'text-sm' }, h('i', { class: 'fa-solid fa-chair mr-1 text-emerald-700' }), m.seat ? `${m.seat}（${m.qty || 1} 張）` : `座位未填（${m.qty || 1} 張）`) : null,
+    bought ? h('div', { class: 'text-xs text-slate-400' }, h('i', { class: 'fa-solid fa-bell mr-1' }), m.remind?.length ? `提醒：${REMIND_OPTS.filter(([x]) => m.remind.includes(x)).map(([, l]) => l).join('、')}` : '未設定提醒') : null,
+    bought && m.checks?.length ? h('div', { class: 'flex flex-wrap gap-1' }, m.checks.map((c) => h('span', { class: 'text-xs px-2 py-0.5 rounded bg-slate-700', text: c }))) : null,
+    bought && m.note ? h('div', { class: 'text-xs text-slate-300 whitespace-pre-wrap', text: m.note }) : null,
+    h('div', { class: 'flex flex-wrap gap-2 pt-1 text-sm' },
+      bought ? h('button', { class: 'px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500', onclick: () => openTicketModal(id) }, '編輯')
+        : h('button', { class: 'px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500', title: '搶到了，填入座位與提醒', onclick: () => openTicketModal(id) }, '我買到了'),
+      link ? h('a', { href: link, target: '_blank', rel: 'noopener noreferrer', class: 'px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500' }, '官方頁') : null,
+      h('button', { class: 'px-3 py-1 rounded-lg bg-slate-700 hover:bg-slate-600', title: '複製活動重點', onclick: () => copyShare(ev) }, h('i', { class: 'fa-regular fa-copy' })),
+      h('button', { class: 'px-3 py-1 rounded-lg bg-slate-700 hover:bg-slate-600', title: '下載 .ics', onclick: () => exportOne(ev) }, h('i', { class: 'fa-solid fa-calendar-plus' })),
+      h('button', { class: 'ml-auto px-3 py-1 rounded-lg bg-slate-700 hover:bg-red-600 hover:text-white', onclick: () => removeMine(id) }, '移除')));
+}
+
+function renderWallet() {
+  const now = Date.now();
+  walletNodes.length = 0;
+  const entries = Object.entries(S.mine).map(([id, m]) => ({ id, m, ev: dispOf(id) })).filter((x) => x.ev);
+  const bought = entries.filter((x) => x.m.status === 'bought').sort((a, b) => (a.m.showAt ?? a.ev.startsAt ?? Infinity) - (b.m.showAt ?? b.ev.startsAt ?? Infinity));
+  const want = entries.filter((x) => x.m.status === 'want').sort((a, b) => (targetOf(a.ev, now)?.t ?? Infinity) - (targetOf(b.ev, now)?.t ?? Infinity));
+  const empty = (t) => h('p', { class: 'text-sm text-slate-500', text: t });
+  $('wBought').replaceChildren(...(bought.length ? bought.map((x) => walletCard(x.id, x.m, x.ev, now)) : [empty('尚未標記已購買。在戰情日曆的卡片按「已購」即可新增。')]));
+  $('wWant').replaceChildren(...(want.length ? want.map((x) => walletCard(x.id, x.m, x.ev, now)) : [empty('尚未加入想搶票的活動。在卡片按「想搶」即可加入，開賣前會提醒。')]));
+  $('wBoughtN').textContent = `（${bought.length}）`;
+  $('wWantN').textContent = `（${want.length}）`;
+  $('walletBadge').textContent = entries.length ? String(entries.length) : '';
+  $('walletBadge').hidden = !entries.length;
+}
+
+// ---------- .ics ----------
+function icsItemForEvent(ev, now) {
+  const tg = targetOf(ev, now);
+  if (!tg) return null;
+  if (tg.kind === 'show' && ev.dateOnly) return null; // 只有日期沒有時間，不匯出以免產生錯誤的時間
+  const label = tg.kind === 'open' ? '開賣' : tg.kind === 'close' ? '販售截止' : '演出';
+  return {
+    uid: `${ev.eventId}-${tg.t}@ticketwar`,
+    startMs: tg.t,
+    durationMin: tg.kind === 'show' ? 180 : 30,
+    summary: `【${label}】${ev.title}`,
+    description: `${platName(ev)}\n${ev.venues?.join('、') || ''}\n${priceText(ev)}${ev.sim ? '\n（模擬活動）' : ''}`,
+    url: safeUrl(ev.url) || undefined,
+    alarmsMin: tg.kind === 'open' ? [1440, 60, 10] : [60],
+  };
+}
+function icsItemForBought(id, m, ev) {
+  if (m.showAt == null) return null;
+  return {
+    uid: `${id}-ticket@ticketwar`,
+    startMs: m.showAt,
+    durationMin: 180,
+    summary: `【已購票】${ev.title}`,
+    description: [platName(ev), m.seat ? `座位：${m.seat}（${m.qty || 1} 張）` : '', ...(m.checks || []).map((c) => `• ${c}`), m.note || ''].filter(Boolean).join('\n'),
+    url: safeUrl(ev.url) || undefined,
+    alarmsMin: m.remind?.length ? m.remind : [60],
+  };
+}
+function downloadItems(items) {
+  if (!items.length) { toast('沒有可匯出的時間點（只有日期、沒有時間的活動不會匯出）', 'warn'); return; }
+  const blob = new Blob([buildIcs(items)], { type: 'text/calendar;charset=utf-8' });
+  const a = h('a', { href: URL.createObjectURL(blob), download: 'ticketwar.ics' });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast(`已匯出 ${items.length} 筆行事曆事件`);
+}
+function itemForId(id, now) {
+  const m = S.mine[id];
+  const ev = dispOf(id);
+  if (!ev) return null;
+  return m?.status === 'bought' ? icsItemForBought(id, m, ev) : icsItemForEvent(ev, now);
+}
+function exportOne(ev) { const it = itemForId(ev.eventId, Date.now()); downloadItems(it ? [it] : []); }
+function exportMine() { const now = Date.now(); downloadItems(Object.keys(S.mine).map((id) => itemForId(id, now)).filter(Boolean)); }
+
+// ---------- 重新抓取 ----------
+const PROXY = './proxy?path=';
+const DIRECT = 'https://apis.ticketplus.com.tw/config/api/v1/getS3?path=';
+let useProxy = location.protocol.startsWith('http');
+
+async function getJson(path) {
+  const attempts = useProxy ? [PROXY, DIRECT] : [DIRECT];
+  let lastErr;
+  for (const base of attempts) {
+    try {
+      const res = await fetch(base + path, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data && data.errCode && data.errCode !== '00') { const e = new Error(data.errCode); e.code = data.errCode; throw e; }
+      if (base === DIRECT) useProxy = false;
+      return data;
+    } catch (e) { lastErr = e; if (e.code) throw e; }
+  }
+  throw lastErr;
+}
+const optionalJson = (path) => getJson(path).catch((e) => (e.code === '102' ? null : Promise.reject(e)));
+
+// 套用本機伺服器回傳的多平台資料（/sources 或 /update 共用）
+function applyServerResult(res) {
+  const okKeys = Object.entries(res.sources).filter(([, v]) => v.ok).map(([k]) => k);
+  const failed = Object.entries(res.sources).filter(([, v]) => !v.ok).map(([k]) => k);
+  if (!okKeys.length) throw new Error('所有平台都抓取失敗');
+  const kept = Object.values(S.events).filter((e) => !e.sim && !okKeys.includes(platformOf(e)));
+  const fresh = res.events.filter((e) => e && e.eventId && e.title).map(slim);
+  applySnapshot({ fetchedAt: res.fetchedAt, source: 'live', events: [...fresh, ...kept] }, { keepSim: true });
+  populateFilters(); renderBoard(); renderWallet(); renderInfo(); fillArenaSelects();
+  const names = (ks) => ks.map((k) => PLATFORMS[k] ?? k).join('、');
+  toast(`${res.saved ? '已更新並存檔' : '已更新'} ${fresh.length} 筆活動（${names(okKeys)}）${failed.length ? `；${names(failed)} 抓取失敗，沿用舊資料` : ''}${res.saved ? '。重新整理頁面即可載入新的 HTML' : ''}`, failed.length ? 'warn' : 'info', 7000);
+}
+
+async function updateAndSave() {
+  const btn = $('btnUpdate');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>更新中（約 1–2 分鐘）';
+  try {
+    const r = await fetch('./update', { method: 'POST', headers: { 'x-ticketwar': '1' } });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    applyServerResult(await r.json());
+  } catch (e) {
+    toast(`更新失敗：${e.message}`, 'warn', 6000);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-1"></i>更新並存檔';
+  }
+}
+
+async function refreshLive() {
+  const btn = $('btnRefresh');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>抓取中';
+  try {
+    // 優先由本機伺服器一次更新全部平台（node demo/serve.mjs）；沒有伺服器才退回瀏覽器直連 Ticket Plus
+    if (location.protocol.startsWith('http')) {
+      let res = null;
+      try { const r = await fetch('./sources', { cache: 'no-store' }); if (r.ok) res = await r.json(); } catch { /* 沒有伺服器 */ }
+      if (res && res.events && res.sources) { applyServerResult(res); return; }
+    }
+    const main = await getJson('main/mainEvents.json');
+    const info = main?.allEventMainPageInfo;
+    if (!info) throw new Error('回應格式不符');
+    const ids = [...new Set([...(main.allEventId || []), ...Object.keys(info)])];
+    const fetchedAt = Date.now();
+    let done = 0;
+    const events = (await mapLimit(ids, 5, async (id) => {
+      try {
+        const [event, ss, pp] = await Promise.all([getJson(`event/${id}/event.json`), optionalJson(`event/${id}/sessions.json`), optionalJson(`event/${id}/products.json`)]);
+        const sessions = ss?.sessions ?? [];
+        const areas = sessions.some((s) => s.ticketArea) ? ((await optionalJson(`event/${id}/ticketAreas.json`))?.ticketAreas ?? []) : [];
+        return slim(normalizeEvent({ eventId: id, main: info[id], event, sessions, products: pp?.products ?? [], areas, fetchedAt }));
+      } catch { return null; } finally { done++; btn.lastChild.textContent = `抓取中 ${done}/${ids.length}`; }
+    })).filter(Boolean);
+    if (!events.length) throw new Error('沒有取得任何活動');
+    // 其他平台：由本機伺服器（node demo/serve.mjs）代為讀取；直接開檔時沿用既有資料
+    let others = null;
+    if (location.protocol.startsWith('http')) {
+      try { const r = await fetch('./sources', { cache: 'no-store' }); if (r.ok) others = await r.json(); } catch { /* 沒有伺服器就沿用既有資料 */ }
+    }
+    const failedKeys = others ? Object.entries(others.sources || {}).filter(([, v]) => !v.ok).map(([k]) => k) : [];
+    const kept = Object.values(S.events).filter((e) => !e.sim && platformOf(e) !== 'ticketplus' && (!others || failedKeys.includes(platformOf(e))));
+    const all = [...events.map((e) => ({ ...e, platform: 'ticketplus' })), ...(others ? others.events.filter((e) => e && e.eventId && e.title).map(slim) : []), ...kept];
+    applySnapshot({ fetchedAt, source: 'live', events: all }, { keepSim: true });
+    populateFilters(); renderBoard(); renderWallet(); renderInfo(); fillArenaSelects();
+    toast(others ? `已更新 ${all.length} 筆活動${failedKeys.length ? `（${failedKeys.map((k) => PLATFORMS[k] ?? k).join('、')} 抓取失敗，沿用舊資料）` : ''}` : `已更新 Ticket Plus ${events.length} 筆；其他平台需用 node demo/serve.mjs 開啟才能更新`, failedKeys.length || !others ? 'warn' : 'info', 6000);
+  } catch (e) {
+    toast('無法直接連線官方資料（瀏覽器跨網域限制）。請用「node demo/serve.mjs」開啟本頁，或重新執行 node demo/snapshot.mjs 與 node demo/build.mjs。', 'error', 9000);
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-rotate mr-1"></i>重新抓取';
+  }
+}
+
+// 與 build.mjs 相同的精簡規則（瀏覽器端也使用）
+function slim(e) {
+  const seen = new Map();
+  for (const a of e.areas || []) if (!seen.has(a.name)) seen.set(a.name, { name: a.name, price: a.price });
+  return {
+    eventId: e.eventId, platform: e.platform || 'ticketplus', dateOnly: e.dateOnly || undefined, title: e.title, category: e.category, organizers: e.organizers,
+    sessions: (e.sessions || []).map((s) => ({ dateStart: s.dateStart, dateEnd: s.dateEnd, timeStart: s.timeStart, startsAt: s.startsAt, endsOnMs: s.endsOnMs, venue: s.venue, city: s.city, saleStart: s.saleStart, saleEnd: s.saleEnd })),
+    areas: [...seen.values()].slice(0, 40),
+    priceMin: e.priceMin, priceMax: e.priceMax, saleStarts: e.saleStarts, saleStart: e.saleStart, saleEnds: e.saleEnds, saleEnd: e.saleEnd,
+    startsAt: e.startsAt, endsOnMs: e.endsOnMs, dateStart: e.dateStart, dateEnd: e.dateEnd,
+    cities: e.cities, venues: e.venues, image: e.image, url: e.url,
+  };
+}
+
+function renderInfo() {
+  const real = Object.values(S.events).filter((e) => !e.sim);
+  const by = Object.keys(PLATFORMS).map((p) => [p, real.filter((e) => platformOf(e) === p).length]).filter(([, n]) => n > 0);
+  $('dataInfo').textContent = `真實活動 ${real.length} 筆（${by.map(([p, n]) => `${PLATFORMS[p]} ${n}`).join('、')}）｜資料時間 ${formatDateTime(S.fetchedAt)}｜${S.source === 'live' ? '即時抓取' : '內建快照'}`;
+}
+
+// ================= 演練場（依各平台一般購票流程） =================
+const SHORT = { ticketplus: 'Ticket Plus', tixcraft: '拓元', kktix: 'KKTIX', opentix: 'OPENTIX' };
+const STEP_LABEL = {
+  wait: '活動頁等開賣', queue: '排隊等候', session: '選擇場次', quiz: '驗證問題', area: '選擇票區', qty: '張數＋驗證碼',
+  tickets: '選票種張數', form: '填寫資料', seats: '選位', zoneSeats: '選位', ticketType: '選票種', pay: '付款',
+};
+// rank: [S 門檻秒, A 門檻秒]。步驟與保留時間為依各平台公開購票頁一般流程整理的近似值，實際會隨活動調整。
+const FLOWS = {
+  tixcraft: {
+    rank: [10, 15], hold: '約 10 分鐘',
+    steps: ['wait', 'queue', 'session', 'quiz', 'area', 'qty', 'pay'],
+    note: '活動頁倒數 → 排隊 → 選場次 →（驗證問題）→ 選票區 → 選張數 + 圖形驗證碼 + 同意條款 → 系統電腦配位 → 選付款方式',
+  },
+  kktix: {
+    rank: [8, 13], hold: '約 15 分鐘',
+    steps: ['wait', 'queue', 'tickets', 'form', 'pay'],
+    note: '活動頁倒數 → 等候室 → 選票種與張數 + 同意條款 → 填寫報名資料 → 選付款方式（保留時間內完成）',
+  },
+  ticketplus: {
+    rank: [11, 17], hold: '約 10 分鐘',
+    steps: ['wait', 'session', 'area', 'seats', 'pay'],
+    note: '活動頁倒數 → 選場次 → 選票區與票數 → 自選座位或電腦配位 → 購物車倒數內選付款方式',
+  },
+  opentix: {
+    rank: [12, 18], hold: '約 15 分鐘',
+    steps: ['wait', 'session', 'zoneSeats', 'ticketType', 'pay'],
+    note: '活動頁倒數 → 選場次 → 看座位圖依價位分區自選座位 → 選票種（全票／優惠票）→ 選付款方式',
+  },
+};
+const PAYS = ['信用卡', 'ATM 虛擬帳號', '超商代碼繳費'];
+const ri = (n) => Math.floor(Math.random() * n);
+const A = {
+  eventId: null, plat: null, state: 'idle', start: 0, penalty: 0, raf: 0, timers: [], run: null, i: 0, steps: [],
+};
+
+function fillArenaSelects() {
+  const evs = Object.values(S.events).sort((a, b) => Number(!!b.sim) - Number(!!a.sim) || a.title.localeCompare(b.title, 'zh-Hant'));
+  if (!A.eventId || !S.events[A.eventId]) A.eventId = evs[0]?.eventId ?? null;
+  if (!A.plat || !(A.plat in FLOWS)) A.plat = platformOf(S.events[A.eventId] || {});
+  $('aEvent').replaceChildren(...evs.map((e) => h('option', { value: e.eventId, selected: e.eventId === A.eventId }, e.title.slice(0, 50))));
+  $('aPlat').replaceChildren(...Object.keys(FLOWS).map((p) => h('option', { value: p, selected: p === A.plat }, PLATFORMS[p])));
+  const artists = ['全部藝人', ...new Set(S.quiz.map((q) => q.artist))];
+  const cur = $('aArtist').value || '全部藝人';
+  $('aArtist').replaceChildren(...artists.map((a) => h('option', { value: a, selected: a === cur }, a)));
+}
+
+function areaPool(ev) {
+  const m = new Map();
+  for (const a of ev?.areas || []) if (a.price > 0 && !m.has(a.name)) m.set(a.name, a);
+  const pool = m.size >= 4 ? [...m.values()] : DEFAULT_AREAS;
+  return shuffle(pool).slice(0, 6).map((a) => ({ name: a.name, price: a.price, soldOut: false }));
+}
+
+const rankOf = (ms, plat) => {
+  const r = (FLOWS[plat] || FLOWS.ticketplus).rank;
+  return ms < r[0] * 1000 ? 'S' : ms < r[1] * 1000 ? 'A' : 'B';
+};
+const RANK_COLOR = { S: 'text-amber-700', A: 'text-emerald-700', B: 'text-slate-300' };
+const fmtMs = (ms) => (ms / 1000).toFixed(3);
+const elapsed = () => (A.start ? performance.now() - A.start : 0) + A.penalty;
+
+function clearTimers() { A.timers.forEach((t) => { clearTimeout(t); clearInterval(t); }); A.timers = []; cancelAnimationFrame(A.raf); }
+
+function renderIdle(message) {
+  clearTimers();
+  A.state = 'idle';
+  const ev = S.events[A.eventId];
+  const f = FLOWS[A.plat] || FLOWS.ticketplus;
+  $('aTarget').textContent = ev ? `活動：${ev.title.slice(0, 40)}` : '請先選擇活動';
+  $('aTimer').textContent = '0.000';
+  $('stage').replaceChildren(h('div', { class: 'text-center py-8 space-y-4' },
+    message ? h('div', { class: 'text-slate-300', text: message }) : null,
+    h('div', { class: 'max-w-xl mx-auto text-sm text-slate-300' },
+      h('div', { class: `inline-block px-2 py-0.5 rounded ${PLAT_COLOR[A.plat]} font-bold mb-2`, text: `${PLATFORMS[A.plat]} 流程` }),
+      h('div', { text: f.note }),
+      h('div', { class: 'text-xs text-slate-500 mt-2', text: `訂單保留${f.hold}（示範不計入）｜評級：S < ${f.rank[0]} 秒、A < ${f.rank[1]} 秒、其餘 B` })),
+    h('button', { id: 'btnStart', class: 'px-8 py-4 rounded-xl bg-red-600 hover:bg-red-500 text-xl font-bold', onclick: startRun }, h('i', { class: 'fa-solid fa-play mr-2' }), '開始挑戰'),
+    h('div', { class: 'text-xs text-slate-500', text: '開始後會進入活動頁等待開賣倒數，開賣瞬間才開始計時。' })));
+}
+
+function makeRun(ev) {
+  const base = ev?.startsAt && ev.startsAt > Date.now() ? ev.startsAt : Date.now() + 45 * DAY;
+  const sessions = [0, 1, 2].map((d) => {
+    const t = new Date(base + d * DAY);
+    return { id: d, label: `${t.getMonth() + 1}/${t.getDate()}（${'日一二三四五六'[t.getDay()]}）${d === 1 ? '14:30' : '19:00'}` };
+  });
+  const areas = areaPool(ev);
+  const target = areas[ri(areas.length)];
+  for (const a of areas) a.soldOut = a !== target && Math.random() < 0.25;
+  const qty = 2 + ri(3);
+  const byPrice = [...areas].sort((a, b) => b.price - a.price).slice(0, 3);
+  const run = {
+    sessions, session: sessions[ri(3)], areas, area: target, qty, pay: PAYS[ri(3)],
+    zones: byPrice, zone: byPrice[ri(byPrice.length)], contention: 0,
+  };
+  run.seats = makeSeats(run, A.plat === 'opentix');
+  return run;
+}
+
+function makeSeats(run, zoned) {
+  const R = 6, C = 10;
+  const zoneOf = (r) => (zoned ? Math.floor(r / 2) : 0);
+  const taken = Array.from({ length: R }, () => Array.from({ length: C }, () => Math.random() < 0.35));
+  const zi = zoned ? run.zones.indexOf(run.zone) : 0;
+  const rows = [...Array(R).keys()].filter((r) => zoneOf(r) === zi);
+  const hasRun = () => rows.some((r) => { for (let c = 0; c + run.qty <= C; c++) if (taken[r].slice(c, c + run.qty).every((x) => !x)) return true; return false; });
+  if (!hasRun()) { const r = rows[ri(rows.length)]; const c = ri(C - run.qty + 1); for (let k = 0; k < run.qty; k++) taken[r][c + k] = false; }
+  return { R, C, taken, zoneOf, picked: [] };
+}
+
+function missionText() {
+  const r = A.run;
+  const p = [];
+  if (A.plat !== 'kktix') p.push(r.session.label);
+  if (A.plat === 'tixcraft' || A.plat === 'ticketplus') p.push(`${r.area.name} ${r.qty} 張`);
+  if (A.plat === 'kktix') p.push(`${r.area.name} ${r.qty} 張`);
+  if (A.plat === 'opentix') p.push(`${r.zone.name} 連號 ${r.qty} 席`, '全票');
+  if (A.plat === 'ticketplus') p.push('連號');
+  p.push(`付款：${r.pay}`);
+  return `目標：${p.join('｜')}`;
+}
+
+function startRun() {
+  const artist = $('aArtist').value;
+  const pool = S.quiz.filter((q) => artist === '全部藝人' || q.artist === artist);
+  const quizOn = A.plat === 'tixcraft' && $('aQuizOn').checked;
+  if (quizOn && !pool.length) { toast('這個藝人沒有題目', 'warn'); return; }
+  const ev = S.events[A.eventId];
+  clearTimers();
+  A.steps = FLOWS[A.plat].steps.filter((s) => s !== 'quiz' || quizOn);
+  A.run = makeRun(ev);
+  if (quizOn) { const q = pool[ri(pool.length)]; A.run.q = { ...q, options: shuffle([q.right, ...q.wrong]) }; }
+  A.penalty = 0; A.start = 0; A.i = 0;
+  $('aTimer').textContent = '0.000';
+  $('aTarget').textContent = missionText();
+  STEP.wait();
+}
+
+function penalize(node, text) {
+  A.penalty += 1000;
+  if (node) { node.classList.remove('shake'); void node.offsetWidth; node.classList.add('shake'); }
+  toast(`${text}，+1.000 秒`, 'warn', 1500);
+}
+
+function page(body) {
+  return h('div', { class: 'rounded-lg overflow-hidden border border-slate-700' },
+    h('div', { class: `${PLAT_COLOR[A.plat]} px-3 py-2 text-sm font-bold flex items-center justify-between` },
+      h('span', { text: PLATFORMS[A.plat] }), h('span', { class: 'text-xs font-normal opacity-80', text: '已登入（示範帳號）' })),
+    h('ol', { class: 'flex flex-wrap gap-x-3 gap-y-1 px-3 py-2 bg-slate-900 text-xs' }, A.steps.map((s, i) => h('li', {
+      class: i === A.i ? 'text-amber-700 font-bold' : i < A.i ? 'text-emerald-700' : 'text-slate-500', text: `${i + 1}. ${STEP_LABEL[s]}`,
+    }))),
+    h('div', { class: 'p-4 bg-slate-950' }, body));
+}
+const show = (...body) => $('stage').replaceChildren(page(h('div', {}, ...body)));
+const go = () => { A.i++; const s = A.steps[A.i]; if (s) STEP[s](); else finishRun(); };
+const btnCls = 'px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold disabled:opacity-40';
+const rowCls = 'flex items-center justify-between gap-3 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 mb-2';
+const title = (t) => h('h4', { class: 'font-bold mb-3', text: t });
+
+const STEP = {
+  wait() {
+    A.state = 'countdown';
+    let n = 3 + ri(3);
+    const num = h('div', { class: 'text-6xl font-black text-amber-700 mono my-4', text: String(n) });
+    const btn = h('button', { class: 'px-8 py-3 rounded-xl bg-slate-700 text-slate-400 font-bold disabled:cursor-not-allowed', disabled: true, onclick: () => go() }, '尚未開賣');
+    show(h('div', { class: 'text-center py-4' }, h('div', { class: 'text-sm text-slate-400', text: '距離開賣' }), num, btn,
+      h('div', { class: 'text-xs text-slate-500 mt-3', text: '倒數結束的瞬間才開始計時，越快點下「立即訂購」越好。' })));
+    const tickT = setInterval(() => {
+      n--;
+      if (n > 0) { num.textContent = String(n); return; }
+      clearInterval(tickT);
+      num.textContent = '開賣！';
+      btn.disabled = false; btn.textContent = '立即訂購';
+      btn.className = 'px-8 py-3 rounded-xl bg-red-600 hover:bg-red-500 font-bold text-lg';
+      A.state = 'run';
+      A.start = performance.now();
+      const loop = () => { $('aTimer').textContent = fmtMs(elapsed()); A.raf = requestAnimationFrame(loop); };
+      loop();
+    }, 800);
+    A.timers.push(tickT);
+  },
+
+  queue() {
+    A.state = 'run';
+    let pos = 600 + ri(1400);
+    const label = A.plat === 'kktix' ? '等候室：目前有大量使用者同時進入，請稍候' : '系統忙碌，請稍候，您將依序進入購票頁面';
+    const posEl = h('div', { class: 'text-4xl font-black mono text-sky-700 my-3', text: String(pos) });
+    show(h('div', { class: 'text-center py-6' }, h('div', { class: 'text-sm text-slate-300', text: label }), h('div', { class: 'text-xs text-slate-500 mt-2', text: '前方排隊人數' }), posEl,
+      h('div', { class: 'text-xs text-slate-500', text: '排隊無法加快，下一步會自動進入。' })));
+    const t = setInterval(() => {
+      pos -= Math.ceil(pos * 0.28) + ri(40);
+      if (pos > 0) { posEl.textContent = String(pos); return; }
+      clearInterval(t); go();
+    }, 160);
+    A.timers.push(t);
+  },
+
+  session() {
+    const r = A.run;
+    show(title('選擇場次'), r.sessions.map((s) => h('div', { class: rowCls },
+      h('span', { text: s.label }),
+      h('button', { class: btnCls, onclick: (e) => (s.id === r.session.id ? go() : penalize(e.currentTarget, '訂到錯的場次')) }, A.plat === 'tixcraft' ? '立即訂購' : '選擇'))));
+  },
+
+  quiz() {
+    A.state = 'q';
+    const q = A.run.q;
+    show(h('div', { class: 'text-xs text-indigo-300 mb-1', text: `驗證問題｜${q.artist}` }),
+      h('div', { class: 'text-lg font-bold mb-3', text: q.text }),
+      h('div', { class: 'grid sm:grid-cols-2 gap-3' }, q.options.map((o, i) => h('button', {
+        class: 'text-left px-4 py-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 font-semibold',
+        onclick: (e) => {
+          if (A.state !== 'q') return;
+          if (o === q.right) { A.state = 'run'; go(); } else { penalize(e.currentTarget, '答錯了'); e.currentTarget.disabled = true; e.currentTarget.classList.add('opacity-40'); }
+        },
+      }, h('span', { class: 'mono text-slate-500 mr-2', text: `${i + 1}` }), o))),
+      h('div', { class: 'text-xs text-slate-500 mt-3', text: '可用鍵盤 1–4 作答。' }));
+  },
+
+  area() {
+    const r = A.run;
+    const withQty = A.plat === 'ticketplus';
+    let pick = null, qty = 1;
+    const draw = () => {
+      const next = h('button', { class: `${btnCls} mt-3`, onclick: (e) => {
+        if (!pick) return penalize(e.currentTarget, '請先選擇票區');
+        if (pick !== r.area) return penalize(e.currentTarget, '選到錯的票區');
+        if (qty !== r.qty) return penalize(e.currentTarget, '票數與目標不符');
+        go();
+      } }, '下一步：選位');
+      show(title(withQty ? '選擇票區與票數' : '選擇票區（座位圖）'),
+        h('div', { class: 'grid grid-cols-2 sm:grid-cols-3 gap-3' }, r.areas.map((a) => h('button', {
+          class: `px-3 py-4 rounded-lg border-2 text-center ${a.soldOut ? 'border-slate-700 bg-slate-900 text-slate-500 cursor-not-allowed' : pick === a ? 'border-amber-400 bg-amber-500/10' : 'border-slate-700 bg-slate-800 hover:bg-slate-700'}`,
+          disabled: a.soldOut,
+          onclick: (e) => {
+            if (!withQty) { if (a === r.area) go(); else penalize(e.currentTarget, '選到錯的票區'); return; }
+            pick = a; draw();
+          },
+        }, h('div', { class: 'font-bold truncate', text: a.name }), h('div', { class: 'text-sm text-slate-400', text: money(a.price) }),
+        h('div', { class: 'text-xs mt-1 text-slate-500', text: a.soldOut ? '已售完' : '熱賣中' })))),
+        withQty ? h('div', { class: 'flex items-center gap-3 mt-3' }, h('span', { class: 'text-sm', text: '票數' }),
+          h('button', { class: 'w-8 h-8 rounded bg-slate-700', onclick: () => { qty = Math.max(1, qty - 1); draw(); } }, '−'),
+          h('span', { class: 'mono w-6 text-center', text: String(qty) }),
+          h('button', { class: 'w-8 h-8 rounded bg-slate-700', onclick: () => { qty = Math.min(4, qty + 1); draw(); } }, '＋')) : null,
+        withQty ? next : null);
+    };
+    draw();
+  },
+
+  qty() {
+    const r = A.run;
+    const cap = () => Array.from({ length: 4 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ'[ri(24)]).join('');
+    let code = cap();
+    const sel = h('select', { class: 'bg-slate-900 border border-slate-700 rounded-lg px-3 py-2' }, [0, 1, 2, 3, 4].map((n) => h('option', { value: String(n) }, `${n} 張`)));
+    const codeEl = h('span', { class: 'mono text-2xl tracking-widest px-3 py-1 rounded bg-neutral-200 text-neutral-800 italic select-none', text: code });
+    const input = h('input', { type: 'text', maxlength: '4', autocomplete: 'off', placeholder: '輸入驗證碼', class: 'bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 mono uppercase w-36' });
+    const agree = h('input', { type: 'checkbox', class: 'w-5 h-5 accent-amber-400' });
+    const agreeRow = h('label', { class: 'flex items-center gap-2 text-sm' }, agree, '我已閱讀並同意會員服務條款');
+    const submit = () => {
+      if (Number(sel.value) !== r.qty) return penalize(sel, '張數與目標不符');
+      if (!agree.checked) return penalize(agreeRow, '請先勾選同意條款');
+      if (input.value.trim().toUpperCase() !== code) {
+        penalize(input, '驗證碼錯誤，已換新驗證碼');
+        code = cap(); codeEl.textContent = code; input.value = ''; input.focus();
+        return;
+      }
+      go();
+    };
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+    show(title(`${r.area.name}｜${money(r.area.price)}`),
+      h('div', { class: 'space-y-3' }, h('div', { class: 'flex items-center gap-3' }, h('span', { class: 'text-sm w-20', text: '購買張數' }), sel),
+        h('div', { class: 'flex items-center gap-3' }, h('span', { class: 'text-sm w-20', text: '驗證碼' }), codeEl, input),
+        agreeRow, h('button', { class: btnCls, onclick: submit }, '確認張數')),
+      h('div', { class: 'text-xs text-slate-500 mt-3', text: '驗證碼為示範自行產生，輸入後可按 Enter。送出後系統會自動配位。' }));
+    setTimeout(() => input.focus(), 0);
+  },
+
+  tickets() {
+    const r = A.run;
+    const counts = new Map(r.areas.map((a) => [a, 0]));
+    const agree = h('input', { type: 'checkbox', class: 'w-5 h-5 accent-amber-400' });
+    const agreeRow = h('label', { class: 'flex items-center gap-2 text-sm mt-3' }, agree, '我已閱讀並同意購票須知與服務條款');
+    const draw = () => {
+      show(title('選擇票種與張數'), r.areas.map((a) => h('div', { class: rowCls },
+        h('div', {}, h('div', { class: 'font-semibold', text: a.name }), h('div', { class: 'text-xs text-slate-400', text: `${money(a.price)}｜${a.soldOut ? '已售完' : '熱賣中'}` })),
+        a.soldOut ? h('span', { class: 'text-slate-500 text-sm', text: '售完' }) : h('div', { class: 'flex items-center gap-2' },
+          h('button', { class: 'w-8 h-8 rounded bg-slate-700', onclick: () => { counts.set(a, Math.max(0, counts.get(a) - 1)); draw(); } }, '−'),
+          h('span', { class: 'mono w-6 text-center', text: String(counts.get(a)) }),
+          h('button', { class: 'w-8 h-8 rounded bg-slate-700', onclick: () => { counts.set(a, Math.min(4, counts.get(a) + 1)); draw(); } }, '＋')))),
+      agreeRow, h('button', { class: `${btnCls} mt-3`, onclick: (e) => {
+        const total = [...counts.values()].reduce((x, y) => x + y, 0);
+        if (counts.get(r.area) !== r.qty || total !== r.qty) return penalize(e.currentTarget, '票種或張數不符');
+        if (!agree.checked) return penalize(agreeRow, '請先勾選同意條款');
+        go();
+      } }, '下一步'));
+    };
+    draw();
+  },
+
+  form() {
+    const f = (label, v) => h('label', { class: 'flex items-center gap-3 text-sm' }, h('span', { class: 'w-16', text: label }), h('input', { type: 'text', value: v, class: 'flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2' }));
+    const fields = [f('姓名', '王小明（範例）'), f('Email', 'demo@example.com'), f('手機', '0900-000-000')];
+    show(title('填寫報名資料'), h('div', { class: 'space-y-2 max-w-md' }, fields),
+      h('div', { class: 'text-xs text-slate-500 mt-2', text: '已預填範例資料（非你的個資）。真實流程建議事先設定好瀏覽器自動填入。' }),
+      h('button', { class: `${btnCls} mt-3`, onclick: (e) => {
+        if (fields.some((x) => !x.querySelector('input').value.trim())) return penalize(e.currentTarget, '資料未填完整');
+        go();
+      } }, '確認表單資料'));
+  },
+
+  seats() { seatPage(false); },
+  zoneSeats() { seatPage(true); },
+
+  ticketType() {
+    const opts = [['愛心票（需證明文件）', false], ['學生票（需證明文件）', false], ['全票', true], ['早鳥優惠票（已截止）', false]];
+    show(title('選擇票種'), shuffle(opts).map(([name, ok]) => h('div', { class: rowCls }, h('span', { text: name }),
+      h('button', { class: btnCls, onclick: (e) => (ok ? go() : penalize(e.currentTarget, '票種不符')) }, '選擇'))));
+  },
+
+  pay() {
+    const r = A.run;
+    let pick = null;
+    const hold = FLOWS[A.plat].hold;
+    const draw = () => {
+      show(title('選擇付款方式'),
+        h('div', { class: 'text-xs text-amber-700 mb-2', text: `座位已保留，請在${hold}內完成付款` }),
+        h('div', { class: 'space-y-2' }, PAYS.map((p) => h('label', { class: 'flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 cursor-pointer' },
+          h('input', { type: 'radio', name: 'pay', class: 'accent-amber-400', checked: pick === p, onchange: () => { pick = p; } }), p))),
+        h('div', { class: 'text-xs text-slate-500 mt-2', text: '示範不會要求任何卡號或個資，也不會連線付款系統。' }),
+        h('button', { class: `${btnCls} mt-3`, onclick: (e) => {
+          if (!pick) return penalize(e.currentTarget, '請選擇付款方式');
+          if (pick !== r.pay) return penalize(e.currentTarget, '付款方式與目標不符');
+          go();
+        } }, h('i', { class: 'fa-solid fa-lock mr-2' }), '確認付款'));
+    };
+    draw();
+  },
+};
+
+function seatPage(zoned) {
+  const r = A.run, s = r.seats;
+  const zoneName = (row) => r.zones[s.zoneOf(row)]?.name ?? '';
+  const zoneColor = ['bg-rose-700', 'bg-amber-600', 'bg-sky-700'];
+  const picked = s.picked;
+  const draw = () => {
+    const confirm = h('button', { class: btnCls, onclick: (e) => {
+      if (picked.length !== r.qty) return penalize(e.currentTarget, `需選滿 ${r.qty} 席`);
+      const row = picked[0][0];
+      const cols = picked.map((p) => p[1]).sort((a, b) => a - b);
+      if (picked.some((p) => p[0] !== row) || cols.some((c, i) => i && c !== cols[i - 1] + 1)) return penalize(e.currentTarget, '座位沒有連在一起');
+      if (zoned && s.zoneOf(row) !== r.zones.indexOf(r.zone)) return penalize(e.currentTarget, '座位不在目標價位區');
+      go();
+    } }, A.plat === 'ticketplus' ? '加入購物車' : '確認選位');
+    const auto = !zoned ? h('button', { class: 'px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 font-semibold', onclick: () => {
+      picked.length = 0;
+      const order = [2, 3, 1, 4, 0, 5];
+      for (const row of order) {
+        for (let c = 0; c + r.qty <= s.C; c++) {
+          if (s.taken[row].slice(c, c + r.qty).every((x) => !x)) { for (let k = 0; k < r.qty; k++) picked.push([row, c + k]); draw(); return; }
+        }
+      }
+    } }, '電腦配位') : null;
+    show(title(zoned ? `座位圖｜${r.zone.name} 連號 ${r.qty} 席` : `選位｜${r.area.name}｜${r.qty} 席連號`),
+      zoned ? h('div', { class: 'flex flex-wrap gap-2 text-xs mb-2' }, r.zones.map((z, i) => h('span', { class: `px-2 py-0.5 rounded ${zoneColor[i]}`, text: `${z.name} ${money(z.price)}` }))) : null,
+      h('div', { class: 'text-center text-xs text-slate-500 mb-2', text: '— 舞台 —' }),
+      h('div', { class: 'overflow-x-auto' }, Array.from({ length: s.R }, (_, row) => h('div', { class: 'flex gap-1 items-center mb-1 justify-center' },
+        h('span', { class: 'w-5 text-xs text-slate-500', text: 'ABCDEF'[row] }),
+        Array.from({ length: s.C }, (_, c) => {
+          const isTaken = s.taken[row][c];
+          const sel = picked.some((p) => p[0] === row && p[1] === c);
+          const base = isTaken ? 'bg-slate-700 text-slate-600 cursor-not-allowed' : sel ? 'bg-amber-400 text-neutral-900' : zoned ? `${zoneColor[s.zoneOf(row)]} hover:brightness-125` : 'bg-sky-200 hover:bg-sky-300 text-neutral-800';
+          return h('button', {
+            class: `w-8 h-8 text-xs rounded ${base}`, disabled: isTaken, title: `${'ABCDEF'[row]}${c + 1}${zoned ? `｜${zoneName(row)}` : ''}`, text: String(c + 1),
+            onclick: () => {
+              const at = picked.findIndex((p) => p[0] === row && p[1] === c);
+              if (at >= 0) { picked.splice(at, 1); draw(); return; }
+              if (picked.length >= r.qty) { toast(`最多只能選 ${r.qty} 席`, 'warn', 1500); return; }
+              if (r.contention < 2 && Math.random() < 0.15) { r.contention++; s.taken[row][c] = true; toast('這個座位剛被其他人買走了，請改選', 'warn', 2000); draw(); return; }
+              picked.push([row, c]); draw();
+            },
+          });
+        })))),
+      h('div', { class: 'flex flex-wrap items-center gap-3 mt-3' }, auto, confirm,
+        h('span', { class: 'text-xs text-slate-400', text: `已選 ${picked.length}/${r.qty}` })),
+      h('div', { class: 'text-xs text-slate-500 mt-2', text: '熱門場次座位可能在你選位時被別人選走；電腦配位較快，但位置由系統決定。' }));
+  };
+  draw();
+}
+
+function finishRun() {
+  if (A.state === 'done') return;
+  const ms = elapsed();
+  A.state = 'done';
+  clearTimers();
+  $('aTimer').textContent = fmtMs(ms);
+  const ev = S.events[A.eventId];
+  const rank = rankOf(ms, A.plat);
+  const prevBest = Math.min(Infinity, ...S.scores.filter((x) => x.plat === A.plat).map((x) => x.ms));
+  S.scores.push({ id: uid(), at: Date.now(), ms: Math.round(ms), rank, penalty: A.penalty, title: ev?.title ?? '', artist: A.run.q?.artist ?? '', plat: A.plat });
+  S.scores = S.scores.slice(-200);
+  save(KEY.scores, S.scores);
+  renderScores();
+  $('aTarget').textContent = `完成｜${PLATFORMS[A.plat]}`;
+  $('stage').replaceChildren(h('div', { class: 'text-center py-10 space-y-3' },
+    h('div', { class: `text-8xl font-black ${RANK_COLOR[rank]}`, text: rank }),
+    h('div', { class: 'mono text-3xl font-bold', text: `${fmtMs(ms)} 秒` }),
+    h('div', { class: 'text-sm text-slate-400', text: A.penalty ? `含失誤罰時 ${fmtMs(A.penalty)} 秒` : '零失誤！' }),
+    ms < prevBest ? h('div', { class: 'text-amber-700 font-semibold', text: `刷新 ${SHORT[A.plat]} 個人最佳！` }) : null,
+    h('button', { class: 'px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-bold', onclick: startRun }, '再來一次')));
+}
+
+function renderScores() {
+  const top = [...S.scores].sort((a, b) => a.ms - b.ms).slice(0, 10);
+  $('board').replaceChildren(...(top.length ? top.map((s, i) => h('li', { class: 'flex items-center gap-2' },
+    h('span', { class: 'w-5 text-slate-500 mono', text: `${i + 1}` }),
+    h('span', { class: `w-5 font-black ${RANK_COLOR[s.rank]}`, text: s.rank }),
+    h('span', { class: 'mono flex-1', text: `${fmtMs(s.ms)} 秒` }),
+    h('span', { class: 'text-xs text-slate-500 truncate max-w-[8rem]', text: SHORT[s.plat] || '' }))) : [h('li', { class: 'text-slate-500', text: '尚無成績' })]));
+  const recent = [...S.scores].reverse().slice(0, 5);
+  $('history').replaceChildren(...(recent.length ? recent.map((s) => h('li', { text: `${new Date(s.at).toLocaleString('zh-TW', { hour12: false })}｜${SHORT[s.plat] || ''}｜${s.rank}｜${fmtMs(s.ms)} 秒` })) : [h('li', { text: '—' })]));
+}
+
+// ---------- 題庫 CRUD ----------
+function renderQuiz() {
+  if (!$('quizList')) return;
+  $('quizList').replaceChildren(...S.quiz.map((q) => h('li', { class: 'flex items-start gap-2 bg-slate-900/60 rounded-lg px-2 py-1.5' },
+    h('div', { class: 'flex-1 min-w-0' },
+      h('div', { class: 'text-xs text-indigo-300', text: q.artist }),
+      h('div', { class: 'truncate', title: q.text, text: q.text }),
+      h('div', { class: 'text-xs text-emerald-700 truncate', text: `答案：${q.right}` })),
+    h('button', { class: 'text-slate-400 hover:text-indigo-500 px-1', title: '編輯', onclick: () => editQuiz(q.id) }, h('i', { class: 'fa-solid fa-pen' })),
+    h('button', { class: 'text-slate-400 hover:text-red-600 px-1', title: '刪除', onclick: () => delQuiz(q.id) }, h('i', { class: 'fa-solid fa-trash' })))));
+}
+function editQuiz(id) {
+  const q = S.quiz.find((x) => x.id === id);
+  if (!q) return;
+  $('qId').value = q.id; $('qArtist').value = q.artist; $('qText').value = q.text; $('qRight').value = q.right;
+  [$('qW1'), $('qW2'), $('qW3')].forEach((el, i) => { el.value = q.wrong[i] ?? ''; });
+  $('qSubmit').textContent = '儲存修改'; $('qCancel').hidden = false;
+}
+function resetQuizForm() { $('quizForm').reset(); $('qId').value = ''; $('qSubmit').textContent = '新增題目'; $('qCancel').hidden = true; }
+function delQuiz(id) {
+  if (S.quiz.length <= 1) { toast('至少需要保留一題', 'warn'); return; }
+  S.quiz = S.quiz.filter((q) => q.id !== id);
+  save(KEY.quiz, S.quiz); renderQuiz(); fillArenaSelects();
+}
+function submitQuiz(e) {
+  e.preventDefault();
+  const q = {
+    id: $('qId').value || uid(),
+    artist: $('qArtist').value.trim(), text: $('qText').value.trim(), right: $('qRight').value.trim(),
+    wrong: [$('qW1').value, $('qW2').value, $('qW3').value].map((s) => s.trim()),
+  };
+  const all = [q.right, ...q.wrong];
+  if (!q.artist || !q.text || all.some((s) => !s)) { toast('每個欄位都要填寫', 'warn'); return; }
+  if (new Set(all.map((s) => s.toLowerCase())).size !== all.length) { toast('四個選項不可重複', 'warn'); return; }
+  const i = S.quiz.findIndex((x) => x.id === q.id);
+  if (i >= 0) S.quiz[i] = q; else S.quiz.push(q);
+  save(KEY.quiz, S.quiz); resetQuizForm(); renderQuiz(); fillArenaSelects();
+  toast('題庫已儲存');
+}
+
+// ================= 分頁與事件 =================
+function setTab(tab) {
+  S.ui.tab = tab; save(KEY.ui, S.ui);
+  $('tab-board').hidden = tab !== 'board';
+  $('tab-arena').hidden = tab !== 'arena';
+  $('tab-wallet').hidden = tab !== 'wallet';
+  if (tab === 'wallet') renderWallet();
+  document.querySelectorAll('.tab').forEach((b) => {
+    const on = b.dataset.tab === tab;
+    b.className = `tab px-4 py-2 rounded-lg text-sm font-semibold ${on ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`;
+  });
+  if (tab === 'arena') { fillArenaSelects(); if (A.state === 'idle' || A.state === 'done') renderIdle(); }
+}
+
+function bind() {
+  document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => setTab(b.dataset.tab)));
+  const upd = () => {
+    Object.assign(S.ui, { q: $('fQ').value, plat: $('fPlat').value, cat: $('fCat').value, city: $('fCity').value, status: $('fStatus').value, sort: $('fSort').value, date: $('fDate').value, mine: $('fMine').value, group: $('fGroup').value, likes: $('fLikes').value });
+    save(KEY.ui, S.ui); renderBoard();
+  };
+  ['fQ', 'fLikes', 'fPlat', 'fCat', 'fCity', 'fStatus', 'fSort', 'fDate', 'fMine', 'fGroup'].forEach((id) => $(id).addEventListener(id === 'fQ' || id === 'fLikes' ? 'input' : 'change', upd));
+  $('btnClear').addEventListener('click', () => {
+    Object.assign(S.ui, { q: '', plat: 'all', cat: '全部', city: '全部', status: 'all', date: 'sale', mine: 'all', sort: 'smart', group: 'smart' });
+    save(KEY.ui, S.ui); populateFilters(); renderBoard();
+  });
+  $('btnIcs').addEventListener('click', () => {
+    if (!Object.keys(S.mine).length) { toast('請先在卡片按「想搶」或「已購」加入清單', 'warn'); return; }
+    exportMine();
+  });
+  $('btnIcsWallet').addEventListener('click', () => {
+    if (!Object.keys(S.mine).length) { toast('票夾是空的', 'warn'); return; }
+    exportMine();
+  });
+  $('btnRefresh')?.addEventListener('click', refreshLive);
+  const bu = $('btnUpdate');
+  if (bu) {
+    bu.addEventListener('click', updateAndSave);
+    // 只有由本機伺服器開啟時才顯示（需要 /update）
+    if (location.protocol.startsWith('http') && typeof fetch === 'function') fetch('./ping').then((r) => r.text()).then((t) => { if (t === 'ticketwar') bu.classList.remove('hidden'); }).catch(() => {});
+  }
+  $('btnReset').addEventListener('click', () => {
+    if (!confirm('這會清除收藏、題庫、成績，並重新載入內建快照與模擬情境。確定嗎？')) return;
+    Object.values(KEY).forEach((k) => localStorage.removeItem(k));
+    location.reload();
+  });
+  $('aEvent').addEventListener('change', (e) => { A.eventId = e.target.value; A.plat = platformOf(S.events[A.eventId] || {}); $('aPlat').value = A.plat; if (A.state === 'idle' || A.state === 'done') renderIdle(); });
+  $('aPlat').addEventListener('change', (e) => { A.plat = e.target.value; if (A.state === 'idle' || A.state === 'done') renderIdle(); });
+  const setView = (v) => { S.ui.view = v; save(KEY.ui, S.ui); renderBoard(); };
+  $('vCard').addEventListener('click', () => setView('card'));
+  $('vList').addEventListener('click', () => setView('list'));
+  $('aArtist').addEventListener('change', () => { if (A.state === 'idle' || A.state === 'done') renderIdle(); });
+  $('btnClearScores').addEventListener('click', () => { if (confirm('清除所有成績？')) { S.scores = []; save(KEY.scores, S.scores); renderScores(); } });
+  $('btnQuizReset')?.addEventListener('click', () => {
+    if (!confirm('還原為預設題庫？自訂題目會消失。')) return;
+    S.quiz = DEFAULT_QUIZ.map((q) => ({ ...q, id: uid() })); save(KEY.quiz, S.quiz); renderQuiz(); fillArenaSelects();
+  });
+  $('quizForm')?.addEventListener('submit', submitQuiz);
+  $('qCancel')?.addEventListener('click', resetQuizForm);
+  document.addEventListener('keydown', (e) => {
+    if (S.ui.tab !== 'arena' || /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '') && document.activeElement.type !== 'checkbox') return;
+    if (A.state === 'q' && /^[1-4]$/.test(e.key)) {
+      const btn = $('stage').querySelectorAll('button')[Number(e.key) - 1];
+      if (btn && !btn.disabled) btn.click();
+    } else if ((A.state === 'idle' || A.state === 'done') && e.key === 'Enter' && document.activeElement?.tagName !== 'BUTTON') startRun();
+  });
+}
+
+// ================= 啟動 =================
+function boot() {
+  init();
+  bind();
+  populateFilters();
+  renderInfo();
+  renderBoard();
+  renderWallet();
+  renderScores();
+  renderQuiz();
+  fillArenaSelects();
+  setTab(S.ui.tab);
+  setInterval(tick, 1000);
+}
+window.addEventListener('error', (e) => toast(`發生錯誤：${e.message}`, 'error', 8000));
+window.addEventListener('unhandledrejection', (e) => toast(`發生錯誤：${e.reason?.message ?? e.reason}`, 'error', 8000));
+boot();
+</script>
+</body>
+</html>

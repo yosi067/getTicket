@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>演唱會儀表板 - TicketPlus 追蹤</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <header class="top">
+    <h1>TicketPlus 演唱會追蹤</h1>
+    <div class="status" id="status" aria-live="polite"></div>
+    <div class="actions">
+      <button id="btnRefresh" type="button">重新整理</button>
+      <button id="btnManual" type="button">＋ 手動追蹤</button>
+    </div>
+  </header>
+
+  <div id="banner" class="banner" hidden></div>
+  <div class="note">公開清單只包含<strong>已開賣</strong>的活動；尚未上架的活動請用「手動追蹤」輸入開賣時間。「售票狀態」依開賣／結束時間計算，不代表一定還有票。分類與場地城市為依標題／地址推測。</div>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="all" type="button">全部活動 <span id="cntAll"></span></button>
+    <button role="tab" data-tab="fav" type="button">我的收藏 <span id="cntFav"></span></button>
+    <button role="tab" data-tab="settings" type="button">設定</button>
+  </nav>
+
+  <section id="tab-all" class="tab">
+    <aside class="filters" id="filters"></aside>
+    <div class="results">
+      <div class="toolbar">
+        <span id="resultCount"></span>
+        <label>排序
+          <select id="sort">
+            <option value="start">演出日期</option>
+            <option value="sale">開賣時間</option>
+            <option value="recent">最近開賣</option>
+            <option value="price">最低票價</option>
+          </select>
+        </label>
+        <label>檢視
+          <select id="view"><option value="cards">卡片</option><option value="list">列表</option></select>
+        </label>
+      </div>
+      <div id="list" class="list"></div>
+    </div>
+  </section>
+
+  <section id="tab-fav" class="tab" hidden>
+    <div class="toolbar">
+      <button id="btnIcsAll" type="button">匯出全部開賣提醒 (.ics)</button>
+    </div>
+    <div id="favList" class="list"></div>
+  </section>
+
+  <section id="tab-settings" class="tab" hidden>
+    <form id="settingsForm" class="settings"></form>
+  </section>
+
+  <dialog id="favDialog"></dialog>
+  <dialog id="manualDialog"></dialog>
+
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>

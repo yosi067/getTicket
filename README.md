@@ -1,1 +1,72 @@
-# getTicket
+# TicketPlus 演唱會追蹤與購票輔助（非官方）
+
+Chrome 擴充功能：彙整 [Ticket Plus](https://ticketplus.com.tw/) 公開售票資訊，提供篩選、收藏、開賣提醒與購票頁輔助。
+
+一般使用者請看 [使用手冊](使用手冊.md)；技術架構請看 [ARCHITECTURE.md](ARCHITECTURE.md)。
+
+## 安裝
+
+1. 取得資料夾 `extension/`，或執行 `npm run pack` 產生 `dist/ticketplus-assist-<版本>.zip` 並解壓縮。
+2. Chrome 開啟 `chrome://extensions`，打開右上角「開發人員模式」。
+3. 按「載入未封裝項目」，選擇 `extension/`（或解壓後的資料夾）。
+4. 點工具列圖示開啟儀表板。
+
+不需要安裝 Node、也不需要本機伺服器。
+
+## 功能
+
+- **全部活動**：標題、日期、場館／城市、主辦、票價、售票狀態；可依關鍵字、分類、城市、狀態、日期、票價、是否劃位篩選與排序。
+- **收藏與提醒**：開賣前 N 分鐘／小時／天提醒、「X 後提醒我」、開賣前自動開啟購票頁、匯出 `.ics`。提醒由背景執行，關閉分頁仍會響；Chrome 需保持開啟。
+- **手動追蹤**：公開清單不含尚未開賣的活動，可自行輸入名稱、開賣時間（台灣時間）與連結。
+- **關注關鍵字**：新活動上架符合關鍵字時通知。
+- **購票輔助**（Ticket Plus 頁面右下角面板）：開賣倒數（伺服器時間校正，約 ±1 秒）、檢查清單、依偏好選場次／票區／張數／連續座位。
+
+## 網頁 Demo：TicketWar Pro
+
+`demo/` 內為獨立的單頁 Demo（看板、票夾、各平台購票演練），與擴充功能互不相依。資料含內建快照與模擬情境，僅供展示與練習。
+
+| 檔案 | 說明 |
+| --- | --- |
+| `demo/ticketwar.html` | 完整版（295 筆活動、即時抓取、演練場、題庫） |
+| `demo/ticketwar-lite.html` | 精簡版，可直接上傳（保留看板、票夾、演練場；無即時抓取與題庫編輯，約 119 筆活動）；需連網載入 CDN |
+
+```
+npm run demo:update     # 一次完成：抓取四個平台 → 寫入快照 → 重建兩個 HTML（更新資料只需要這一行）
+npm run demo            # 本機伺服器；頁面「重新抓取」一次更新全部平台（僅在頁面內），「更新並存檔」則同時寫入快照並重建 HTML
+npm run demo:snapshot   # 只抓取（可加 --skip-ticketplus 或 --only=kktix,opentix）
+npm run demo:build      # 只重建 HTML
+```
+
+直接雙擊開啟 HTML 時，「重新抓取」只能更新 Ticket Plus；想一次更新全部平台，請用 `npm run demo` 開啟。
+
+## 限制（請先閱讀）
+
+- 公開資料**只含已開賣活動**；**沒有表演者欄位**（顯示的是主辦單位）；分類為依標題推測；售票狀態僅依販售時間，**不含庫存**。
+- 購票輔助中，場次頁的選擇器已實測；**票區／張數／選位頁的選擇器來自前端程式碼推測，尚未在實際購票流程驗證**。第一次請在不急的活動上試跑，並看面板記錄確認每一步。網站改版可能失效。
+- 輔助**不會**繞過驗證碼、排隊或登入；**不會**儲存或填寫帳號密碼；**永遠不會**在付款頁送出。遇到這些狀況會暫停並提示。
+- 輔助預設關閉，需在收藏設定或面板中啟用。
+- 時鐘校正精度約 ±1 秒，無法保證搶到票。
+
+## 隱私
+
+資料只存在本機瀏覽器（`chrome.storage.local`），僅向 `apis.ticketplus.com.tw` 與 `ticketplus.com.tw` 發出請求，無任何第三方傳輸。
+
+## 開發
+
+```
+npm test        # 單元測試（node:test，使用真實 API 資料裁切的 fixtures）
+npm run icons   # 重新產生圖示
+npm run pack    # 打包 zip
+```
+
+## 免責
+
+非 Ticket Plus 官方產品。請遵守其服務條款；使用自動化輔助的風險由使用者自行承擔。
+
+## 入口網站與 GitHub Pages
+
+- `site/index.html`：入口頁（現況分析：類型／場館／月份／地區／平台；即將開賣；最新演唱會新聞），「售票統整平台」放在 `app/`。
+- 本機預覽：`npm run site` 後開啟 `dist-site/index.html`（`npm run news` 抓新聞，`npm run site:build` 只重建）。
+- 自動部署：`.github/workflows/pages.yml` 於推送 `main`、每日 06:00（台灣）與手動觸發時，執行測試、更新快照與新聞、建置並部署。
+  首次使用請到 GitHub repo 的 Settings → Pages，把 Source 設為「GitHub Actions」。
+- 活動卡片的複製按鈕會產生可直接貼給朋友的重點文字（`formatShareText`）。

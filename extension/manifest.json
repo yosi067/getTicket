@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "TicketPlus 演唱會追蹤與購票輔助",
+  "version": "0.1.0",
+  "description": "彙整 Ticket Plus 售票資訊，提供篩選、收藏、開賣提醒與購票頁輔助（非官方工具）。",
+  "minimum_chrome_version": "110",
+  "permissions": ["storage", "alarms", "notifications"],
+  "host_permissions": ["https://apis.ticketplus.com.tw/*", "https://ticketplus.com.tw/*", "https://www.ticketplus.com.tw/*"],
+  "background": { "service_worker": "background/service-worker.js", "type": "module" },
+  "action": { "default_title": "開啟演唱會儀表板" },
+  "icons": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "content_scripts": [
+    {
+      "matches": ["https://ticketplus.com.tw/*", "https://www.ticketplus.com.tw/*"],
+      "js": ["content/assist.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    { "resources": ["shared/lib.js"], "matches": ["https://ticketplus.com.tw/*", "https://www.ticketplus.com.tw/*"] }
+  ]
+}

@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TicketWar｜演唱會與售票資訊入口</title>
+<meta name="description" content="整合 Ticket Plus、拓元、KKTIX、OPENTIX 的活動資料，提供現況分析、最新演唱會新聞與售票統整平台。">
+<style>
+:root { --bg:#0f172a; --card:#1e293b; --line:#334155; --txt:#e2e8f0; --mute:#94a3b8; --pri:#6366f1; --pri2:#818cf8; }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--txt); font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","PingFang TC",sans-serif; }
+a { color:var(--pri2); text-decoration:none; } a:hover { text-decoration:underline; }
+.wrap { max-width:1100px; margin:0 auto; padding:0 16px; }
+header.top { border-bottom:1px solid var(--line); }
+header.top .wrap { display:flex; align-items:center; gap:16px; height:56px; }
+header.top b { font-size:18px; } header.top nav { margin-left:auto; display:flex; gap:16px; font-size:14px; }
+.hero { padding:48px 0 28px; text-align:center; }
+.hero h1 { margin:0 0 8px; font-size:34px; } .hero p { margin:0 auto 22px; color:var(--mute); max-width:640px; }
+.btn { display:inline-block; padding:10px 20px; border-radius:10px; font-weight:600; background:var(--pri); color:#fff; margin:4px; }
+.btn:hover { background:#4f46e5; text-decoration:none; } .btn.alt { background:var(--card); border:1px solid var(--line); }
+.kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:8px 0 8px; }
+.kpi { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; text-align:center; }
+.kpi b { display:block; font-size:26px; } .kpi span { color:var(--mute); font-size:13px; }
+h2 { margin:36px 0 12px; font-size:22px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+h2 small { font-size:13px; color:var(--mute); font-weight:400; }
+.seg { margin-left:auto; display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+.seg button { background:transparent; color:var(--mute); border:0; padding:6px 12px; cursor:pointer; font:inherit; font-size:13px; }
+.seg button.on { background:var(--pri); color:#fff; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:14px; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
+.card h3 { margin:0 0 10px; font-size:15px; }
+.row { display:grid; grid-template-columns:minmax(70px,120px) 1fr 36px; gap:8px; align-items:center; font-size:13px; margin:5px 0; }
+.row .nm { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .row .n { text-align:right; color:var(--mute); }
+.bar { background:#0b1220; border-radius:4px; height:12px; overflow:hidden; } .bar i { display:block; height:100%; background:linear-gradient(90deg,var(--pri),var(--pri2)); }
+.months { display:flex; align-items:flex-end; gap:4px; height:150px; margin-top:6px; }
+.months div { flex:1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; height:100%; font-size:11px; color:var(--mute); }
+.months i { display:block; width:100%; background:linear-gradient(0deg,var(--pri),var(--pri2)); border-radius:3px 3px 0 0; min-height:2px; }
+.empty { color:var(--mute); font-size:13px; }
+ul.list { list-style:none; margin:0; padding:0; } ul.list li { padding:10px 0; border-bottom:1px solid var(--line); }
+ul.list li:last-child { border:0; } .meta { color:var(--mute); font-size:12px; }
+footer { margin:48px 0 32px; color:var(--mute); font-size:12px; text-align:center; }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <b>🎫 TicketWar</b>
+  <nav><a href="#analysis">現況分析</a><a href="#news">最新消息</a><a href="app/">售票統整平台</a></nav>
+</div></header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1>演唱會與售票資訊入口</h1>
+    <p>整合 Ticket Plus、拓元、KKTIX、OPENTIX 的公開活動資料；看市場現況、追最新消息，再進入平台追蹤開賣與演練搶票。</p>
+    <a class="btn" href="app/">進入售票統整平台 →</a>
+    <a class="btn alt" href="#analysis">先看現況分析</a>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <h2 id="analysis">現況分析 <small id="asof"></small>
+    <span class="seg" id="scope"><button data-s="concert" class="on">演唱會＋音樂祭</button><button data-s="all">全部活動</button></span>
+  </h2>
+  <div class="grid">
+    <div class="card"><h3>活動類型分布</h3><div id="cCategory"></div></div>
+    <div class="card"><h3>熱門場館 Top 10</h3><div id="cVenue"></div></div>
+    <div class="card"><h3>地區分布</h3><div id="cCity"></div></div>
+    <div class="card"><h3>售票平台分布</h3><div id="cPlatform"></div></div>
+  </div>
+  <div class="card" style="margin-top:14px"><h3>演出月份分布（活動起始日）</h3><div class="months" id="cMonth"></div></div>
+
+  <h2>即將開賣 <small>音樂類活動，依開賣時間排序</small></h2>
+  <div class="card"><ul class="list" id="upcoming"></ul></div>
+
+  <h2 id="news">最新演唱會消息 <small id="newsAsof"></small></h2>
+  <div class="card"><ul class="list" id="news-list"></ul></div>
+
+  <footer>
+    資料來源：各售票平台公開頁面與 Google 新聞標題連結，僅供參考，實際以官方為準。本站不登入、不代購、不處理驗證碼。<br>
+    <span id="built"></span>
+  </footer>
+</main>
+
+<script type="application/json" id="data">/*__DATA__*/null</script>
+<script>
+const D = JSON.parse(document.getElementById('data').textContent);
+const $ = (id) => document.getElementById(id);
+const el = (tag, props = {}, ...kids) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) { if (k === 'text') e.textContent = v; else e.setAttribute(k, v); }
+  e.append(...kids.filter(Boolean));
+  return e;
+};
+const fmtDate = (ms) => new Date(ms + 8 * 3600e3).toISOString().slice(0, 16).replace('T', ' ');
+const safe = (u) => (/^https?:\/\//i.test(u || '') ? u : null);
+
+function bars(box, pairs) {
+  if (!pairs.length) { box.replaceChildren(el('div', { class: 'empty', text: '沒有資料' })); return; }
+  const max = Math.max(...pairs.map((p) => p[1]));
+  box.replaceChildren(...pairs.map(([name, n]) => el('div', { class: 'row' },
+    el('span', { class: 'nm', title: name, text: name }),
+    el('div', { class: 'bar' }, Object.assign(el('i'), { style: `width:${(n / max * 100).toFixed(1)}%` })),
+    el('span', { class: 'n', text: String(n) }))));
+}
+
+function renderStats(scope) {
+  const s = D.stats[scope];
+  bars($('cCategory'), D.stats.all.byCategory.filter(([c]) => scope === 'all' || s.byCategory.some(([x]) => x === c)));
+  bars($('cVenue'), s.byVenue);
+  bars($('cCity'), s.byCity);
+  bars($('cPlatform'), s.byPlatform);
+  const max = Math.max(1, ...s.byMonth.map((m) => m[1]));
+  $('cMonth').replaceChildren(...(s.byMonth.length ? s.byMonth.map(([m, n]) => el('div', { title: `${m}：${n} 場` },
+    el('span', { text: String(n) }), Object.assign(el('i'), { style: `height:${(n / max * 110).toFixed(0)}px` }), el('span', { text: m.slice(2) }))) : [el('div', { class: 'empty', text: '沒有資料' })]));
+}
+
+document.querySelectorAll('#scope button').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('#scope button').forEach((x) => x.classList.toggle('on', x === b));
+  renderStats(b.dataset.s);
+}));
+
+const c = D.stats.concert, a = D.stats.all;
+$('kpis').replaceChildren(...[
+  [a.total, '收錄活動'], [c.total, '演唱會＋音樂祭'], [c.byVenue[0]?.[0] ?? '—', '最熱門場館'], [c.byCity[0]?.[0] ?? '—', '最多演出地區'],
+].map(([v, t]) => el('div', { class: 'kpi' }, el('b', { text: String(v) }), el('span', { text: t }))));
+$('asof').textContent = `資料時間 ${fmtDate(D.fetchedAt)}`;
+renderStats('concert');
+
+$('upcoming').replaceChildren(...(D.upcoming.length ? D.upcoming.map((u) => {
+  const href = safe(u.url);
+  return el('li', {}, href ? el('a', { href, target: '_blank', rel: 'noopener noreferrer', text: u.title }) : el('span', { text: u.title }),
+    el('div', { class: 'meta', text: `開賣 ${fmtDate(u.saleStart)}｜${u.platform}${u.venue ? `｜${u.venue}` : ''}` }));
+}) : [el('li', { class: 'empty', text: '目前沒有已公布開賣時間的活動' })]));
+
+$('newsAsof').textContent = D.news.items.length ? `更新於 ${fmtDate(D.news.fetchedAt)}` : '';
+$('news-list').replaceChildren(...(D.news.items.length ? D.news.items.map((n) => {
+  const href = safe(n.link);
+  return el('li', {}, href ? el('a', { href, target: '_blank', rel: 'noopener noreferrer', text: n.title }) : el('span', { text: n.title }),
+    el('div', { class: 'meta', text: `${n.source || '新聞'}｜${fmtDate(n.ts)}` }));
+}) : [el('li', { class: 'empty', text: '暫時無法取得新聞，請稍後再來' })]));
+$('built').textContent = `網站建置時間 ${fmtDate(D.builtAt)}（每日自動更新）`;
+</script>
+</body>
+</html>

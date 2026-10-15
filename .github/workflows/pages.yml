@@ -31,6 +31,8 @@ jobs:
       - name: Fetch news (失敗時沿用舊檔)
         run: node scripts/fetch-news.mjs
       - name: Build
+        env:
+          CHAT_API_URL: ${{ vars.CHAT_API_URL }}
         run: npm run site:build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

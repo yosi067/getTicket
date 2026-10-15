@@ -3,7 +3,8 @@
 import { copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { toRows, upcomingSales } from './site-stats.mjs';
+import { recentSales, toRows, upcomingSales } from './site-stats.mjs';
+import { compactEvents } from '../server/chat-core.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const out = join(root, 'dist-site');
@@ -18,6 +19,7 @@ const data = {
   sources: snap.sources ?? {},
   rows: toRows(snap.events),
   upcoming: upcomingSales(snap.events, now),
+  recent: recentSales(snap.events, now),
   news,
 };
 const safeJson = (v) => JSON.stringify(v).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
@@ -26,12 +28,20 @@ const safeJson = (v) => JSON.stringify(v).replace(/</g, '\\u003c').replace(/\u20
 const statsSrc = (await readFile(join(root, 'scripts/site-stats.mjs'), 'utf8')).replace(/^export\s+/gm, '').replace(/<\/script/gi, '<\\/script');
 if (/^import\s/m.test(statsSrc)) throw new Error('site-stats.mjs 不可含 import');
 
+const chatUrl = process.env.CHAT_API_URL ?? '';
+if (chatUrl && !/^https:\/\/[^\s'"<>]+$/.test(chatUrl)) throw new Error('CHAT_API_URL 必須是 https 網址');
 const tpl = await readFile(join(root, 'site/index.html'), 'utf8');
 if (!tpl.includes('/*__DATA__*/null') || !tpl.includes('/*__STATS__*/')) throw new Error('site/index.html 缺少佔位符');
 
 await rm(out, { recursive: true, force: true });
 await mkdir(join(out, 'app'), { recursive: true });
-await writeFile(join(out, 'index.html'), tpl.replace('/*__DATA__*/null', () => safeJson(data)).replace('/*__STATS__*/', () => statsSrc));
+await writeFile(join(out, 'index.html'), tpl.replace('/*__DATA__*/null', () => safeJson(data)).replace('/*__STATS__*/', () => statsSrc).replace('/*__CHAT_URL__*/\'\'', () => JSON.stringify(chatUrl)));
 await copyFile(join(root, 'demo/ticketwar-web.html'), join(out, 'app/index.html'));
 await writeFile(join(out, '.nojekyll'), '');
+
+// 客服機器人的知識庫：網站說明 + 擴充功能手冊節錄 + 精簡活動清單
+const guide = await readFile(join(root, 'server/site-guide.md'), 'utf8');
+const manual = (await readFile(join(root, '使用手冊.md'), 'utf8')).slice(0, 6000);
+const chatCtx = { builtAt: now, guide: `${guide}\n\n## Chrome 擴充功能手冊（節錄）\n${manual}`, events: compactEvents(snap.events, now) };
+await writeFile(join(out, 'chat-context.json'), JSON.stringify(chatCtx));
 console.log(`已輸出 ${out}（活動 ${snap.events.length} 筆、新聞 ${news.items.length} 則）`);

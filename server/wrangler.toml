@@ -1,0 +1,10 @@
+name = "ticketwar-chat"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+# 允許呼叫的網站來源（逗號分隔）；本機測試可暫時加上 http://localhost:8787
+ALLOWED_ORIGIN = "https://yosi067.github.io"
+SITE_URL = "https://yosi067.github.io/getTicket"
+GEMINI_MODEL = "gemini-2.5-flash"
+# GEMINI_API_KEY 不要寫在這裡，請用 `npx wrangler secret put GEMINI_API_KEY` 設定

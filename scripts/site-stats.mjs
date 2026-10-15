@@ -200,3 +200,20 @@ export function upcomingSales(events, now, limit = 10) {
       url: isHttp(e.url) ? e.url : '',
     }));
 }
+
+// 最近已開賣的表演類活動（沒有未來開賣時，首頁當備援顯示）
+export function recentSales(events, now, limit = 10) {
+  return events
+    .filter((e) => SCOPES.show.has(e.category))
+    .map((e) => ({ e, t: (e.saleStarts ?? []).filter((x) => x <= now).sort((a, b) => b - a)[0] }))
+    .filter((x) => x.t != null)
+    .sort((a, b) => b.t - a.t)
+    .slice(0, limit)
+    .map(({ e, t }) => ({
+      title: e.title,
+      platform: platformName(e.platform ?? 'ticketplus'),
+      venue: (e.venues ?? [])[0] ?? '',
+      saleStart: t,
+      url: isHttp(e.url) ? e.url : '',
+    }));
+}

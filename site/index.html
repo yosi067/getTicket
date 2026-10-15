@@ -31,6 +31,15 @@ header.top nav a:hover { background:var(--pri-l); text-decoration:none; color:va
 .cta { background:var(--pri); color:#fff !important; padding:9px 16px !important; box-shadow:0 4px 14px rgba(232,89,12,.3); }
 .cta:hover { background:var(--pri-d) !important; color:#fff !important; transform:translateY(-1px); }
 @media (max-width:720px) { header.top nav a:not(.cta) { display:none; } }
+.cta, .seg button, .tabs button, .btn { white-space:nowrap; }
+@media (max-width:520px) {
+  header.top .wrap { gap:8px; } .brand b { display:none; }
+  .cta { padding:8px 12px !important; font-size:13px !important; }
+  .seg button { padding:7px 10px; font-size:12px; }
+  .bar .hint { display:none; }
+  .btn { padding:10px 16px; }
+  .chatFab { bottom:68px; right:12px; }
+}
 .progress { position:absolute; left:0; bottom:-1px; height:3px; width:0; background:linear-gradient(90deg,var(--pri),#f59f00); }
 
 /* ---- Hero ---- */
@@ -171,6 +180,31 @@ p.sub { margin:0 0 18px; color:var(--mute); }
 .tp { font-size:11px; padding:2px 8px; border-radius:999px; color:#fff; font-weight:700; white-space:nowrap; }
 .more { display:block; margin:16px auto 0; }
 
+
+/* ---- 客服聊天 ---- */
+.chatFab { position:fixed; right:18px; bottom:72px; z-index:60; display:flex; align-items:center; gap:8px; padding:12px 18px; border:0; border-radius:999px; background:var(--pri); color:#fff; font-weight:700; box-shadow:0 8px 22px rgba(232,89,12,.4); transition:transform .2s; }
+.chatFab:hover { transform:translateY(-2px); }
+.chatBox { position:fixed; right:18px; bottom:18px; z-index:70; width:min(380px,calc(100vw - 24px)); height:min(560px,calc(100vh - 36px)); background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:0 18px 50px rgba(16,24,40,.25); display:none; flex-direction:column; overflow:hidden; animation:fadeup .3s both; }
+.chatBox.open { display:flex; }
+.chatHead { background:linear-gradient(135deg,var(--pri),#f59f00); color:#fff; padding:12px 14px; display:flex; align-items:center; gap:8px; font-weight:800; }
+.chatHead button { margin-left:auto; background:rgba(255,255,255,.2); border:0; color:#fff; width:30px; height:30px; border-radius:8px; }
+.chatMsgs { flex:1; overflow-y:auto; padding:12px; background:var(--bg); display:flex; flex-direction:column; gap:8px; }
+.msg { max-width:88%; padding:8px 12px; border-radius:12px; font-size:14px; line-height:1.55; white-space:pre-wrap; word-break:break-word; animation:pop .25s both; }
+.msg.bot { background:#fff; border:1px solid var(--line); align-self:flex-start; }
+.msg.me { background:var(--pri); color:#fff; align-self:flex-end; }
+.msg.err { background:#fff0f0; border:1px solid #ffc9c9; color:#c92a2a; align-self:flex-start; }
+.msg a { color:var(--pri-d); text-decoration:underline; }
+.quick { display:flex; flex-wrap:wrap; gap:6px; }
+.quick button { border:1px solid var(--pri-m); background:var(--pri-l); color:var(--pri-d); border-radius:999px; padding:4px 10px; font-size:12px; font-weight:600; }
+.chatForm { display:flex; gap:8px; padding:10px; border-top:1px solid var(--line); background:#fff; }
+.chatForm input { flex:1; border:1px solid var(--line); border-radius:10px; padding:9px 12px; font:inherit; min-width:0; }
+.chatForm input:focus { outline:2px solid var(--pri-m); border-color:var(--pri); }
+.chatForm button { border:0; background:var(--pri); color:#fff; border-radius:10px; padding:0 14px; font-weight:700; }
+.chatForm button:disabled { opacity:.5; cursor:not-allowed; }
+.chatNote { font-size:11px; color:var(--faint); padding:0 12px 8px; background:#fff; }
+.typing span { display:inline-block; width:6px; height:6px; margin:0 2px; border-radius:50%; background:var(--faint); animation:bob 1s infinite; }
+.typing span:nth-child(2) { animation-delay:.15s; } .typing span:nth-child(3) { animation-delay:.3s; }
+
 footer { margin:0; padding:34px 0 40px; color:var(--faint); font-size:12px; text-align:center; background:#fff; border-top:1px solid var(--line); }
 
 /* ---- 捲動顯示 ---- */
@@ -214,7 +248,7 @@ footer { margin:0; padding:34px 0 40px; color:var(--faint); font-size:12px; text
       <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     </div>
     <div class="live" id="live">
-      <div class="tag"><span class="dot"></span> 下一場開賣倒數</div>
+      <div class="tag"><span class="dot"></span> <span id="liveTag">下一場開賣倒數</span></div>
       <h3 id="liveTitle">載入中…</h3>
       <div class="meta" id="liveMeta"></div>
       <div class="cd mono" id="liveCd"></div>
@@ -226,7 +260,7 @@ footer { margin:0; padding:34px 0 40px; color:var(--faint); font-size:12px; text
   <div class="kpis" id="heroKpis"></div>
 
   <div class="ticker reveal" id="tickerBox">
-    <div class="lab"><i class="fa-solid fa-bullhorn"></i> 即將開賣</div>
+    <div class="lab"><i class="fa-solid fa-bullhorn"></i> <span id="tickerLab">即將開賣</span></div>
     <div class="tk"><div class="belt" id="belt"></div></div>
   </div>
 
@@ -263,6 +297,13 @@ footer { margin:0; padding:34px 0 40px; color:var(--faint); font-size:12px; text
     <span id="built"></span>
   </div>
 </footer>
+<button class="chatFab" id="chatFab" hidden aria-label="開啟客服" ><i class="fa-solid fa-comments"></i> 問問小幫手</button>
+<div class="chatBox" id="chatBox" role="dialog" aria-label="客服小幫手" hidden>
+  <div class="chatHead"><i class="fa-solid fa-robot"></i> TicketWar 小幫手<button id="chatClose" aria-label="關閉"><i class="fa-solid fa-xmark"></i></button></div>
+  <div class="chatMsgs" id="chatMsgs"></div>
+  <form class="chatForm" id="chatForm"><input id="chatIn" maxlength="300" placeholder="問演唱會資訊或網站怎麼用" autocomplete="off"><button id="chatSend" type="submit">送出</button></form>
+  <div class="chatNote">AI 回答可能有誤，開賣時間與票價請以官方為準。只回答活動資訊與網站使用。</div>
+</div>
 <button class="sticky-top" id="toTop" aria-label="回到頂端"><i class="fa-solid fa-arrow-up"></i></button>
 
 <script type="application/json" id="data">/*__DATA__*/null</script>
@@ -528,29 +569,33 @@ function renderNews() {
 
 /* ---------- Hero：倒數、跑馬燈、KPI ---------- */
 function renderHero() {
-  const up = D.upcoming;
+  const hasUp = D.upcoming.length > 0;
+  const up = hasUp ? D.upcoming : (D.recent || []);
   const total = ROWS.length;
   const kp = [
     ['fa-ticket', '收錄活動', total], ['fa-store', '售票平台', Object.keys(D.sources).length],
-    ['fa-bullhorn', '即將開賣', up.length], ['fa-newspaper', '台灣新聞', D.news.items.length],
+    ['fa-bullhorn', hasUp ? '即將開賣' : '近期已開賣', up.length], ['fa-newspaper', '新聞則數', D.news.items.length],
   ];
   $('#heroKpis').replaceChildren(...kp.map(([ic, l, n]) => { const b = el('b', { class: 'mono', 'data-count': n, text: '0' }); return el('div', { class: 'kpi' }, el('span', {}, el('i', { class: `fa-solid ${ic}` }), l), b); }));
+  $('#liveTag').textContent = hasUp ? '下一場開賣倒數' : '最近一場開賣';
+  $('#tickerLab').textContent = hasUp ? '即將開賣' : '近期開賣';
   if (up[0]) {
     const u = up[0]; const href = safe(u.url);
     $('#liveTitle').replaceChildren(href ? el('a', { href, target: '_blank', rel: 'noopener noreferrer', style: 'color:inherit', text: u.title }) : u.title);
-    $('#liveMeta').textContent = `${fmtDate(u.saleStart)} 開賣｜${u.platform}${u.venue ? `｜${u.venue}` : ''}`;
+    $('#liveMeta').textContent = `${fmtDate(u.saleStart)} ${hasUp ? '開賣' : '已開賣'}｜${u.platform}${u.venue ? `｜${u.venue}` : ''}`;
     const cells = ['天', '時', '分', '秒'].map((l) => { const b = el('b', { text: '00' }); return [b, el('div', {}, b, el('span', { text: l }))]; });
     $('#liveCd').replaceChildren(...cells.map((c) => c[1]));
     const tick = () => {
-      let s = Math.max(0, Math.floor((u.saleStart - Date.now()) / 1000));
+      const s = Math.max(0, Math.floor(Math.abs(u.saleStart - Date.now()) / 1000));
       const v = [Math.floor(s / 86400), Math.floor(s % 86400 / 3600), Math.floor(s % 3600 / 60), s % 60];
       v.forEach((x, i) => { cells[i][0].textContent = p2(x); });
     };
     tick(); setInterval(tick, 1000);
+    if (!hasUp) $('#liveCd').title = '距離開賣已過的時間';
   } else { $('#liveTitle').textContent = '目前沒有已公布開賣時間的活動'; }
-  const items = up.map((u) => { const href = safe(u.url); const t = `${u.title}`; const sm = el('small', { text: `${fmtDate(u.saleStart).slice(5)} ${u.platform}` }); return href ? el('a', { href, target: '_blank', rel: 'noopener noreferrer' }, t, sm) : el('span', {}, t, sm); });
-  if (!items.length) $('#tickerBox').hidden = true;
-  else $('#belt').replaceChildren(...items, ...up.map((u) => { const href = safe(u.url); const sm = el('small', { text: `${fmtDate(u.saleStart).slice(5)} ${u.platform}` }); return href ? el('a', { href, target: '_blank', rel: 'noopener noreferrer', tabindex: -1 }, u.title, sm) : el('span', {}, u.title, sm); }));
+  const mk = (u, hidden) => { const href = safe(u.url); const sm = el('small', { text: `${fmtDate(u.saleStart).slice(5)} ${u.platform}` }); return href ? el('a', { href, target: '_blank', rel: 'noopener noreferrer', tabindex: hidden ? -1 : null }, u.title, sm) : el('span', {}, u.title, sm); };
+  if (!up.length) $('#tickerBox').hidden = true;
+  else $('#belt').replaceChildren(...up.map((u) => mk(u, false)), ...up.map((u) => mk(u, true)));
 }
 
 /* ---------- 打字效果 ---------- */
@@ -587,6 +632,44 @@ function setupScroll() {
   addEventListener('scroll', on, { passive: true }); on();
   top.addEventListener('click', () => scrollTo({ top: 0, behavior: RM ? 'auto' : 'smooth' }));
 }
+
+
+/* ---------- 客服小幫手 ---------- */
+(function chat() {
+  const URL_ = /*__CHAT_URL__*/'';
+  if (!/^https:\/\//.test(URL_)) return;
+  const fab = $('#chatFab'); const box = $('#chatBox'); const msgs = $('#chatMsgs'); const inp = $('#chatIn'); const send = $('#chatSend');
+  const hist = []; let busy = false;
+  fab.hidden = false; box.hidden = false;
+  const add = (cls, text) => {
+    const m = el('div', { class: `msg ${cls}` });
+    // 只把 https 連結轉成可點的 a，其餘一律當純文字
+    String(text).split(/(https:\/\/[^\s<>"'）)]+)/).forEach((part) => { if (/^https:\/\//.test(part)) m.append(el('a', { href: part, target: '_blank', rel: 'noopener noreferrer', text: part })); else m.append(document.createTextNode(part)); });
+    msgs.append(m); msgs.scrollTop = msgs.scrollHeight; return m;
+  };
+  const open = (v) => { box.classList.toggle('open', v); fab.style.display = v ? 'none' : ''; if (v) inp.focus(); };
+  fab.addEventListener('click', () => open(true));
+  $('#chatClose').addEventListener('click', () => open(false));
+  add('bot', '你好，我可以幫你確認演唱會資訊，或說明這個網站怎麼用。');
+  const quick = el('div', { class: 'quick' }, ['最近有哪些演唱會開賣？', '高雄有什麼活動？', '怎麼加入行事曆？', '資料多久更新一次？'].map((q) => el('button', { type: 'button', text: q, onclick: () => ask(q) })));
+  msgs.append(quick);
+  async function ask(text) {
+    text = text.trim();
+    if (!text || busy) return;
+    quick.remove(); busy = true; send.disabled = true; inp.value = '';
+    add('me', text); hist.push({ role: 'user', text });
+    const wait = el('div', { class: 'msg bot typing' }, el('span'), el('span'), el('span')); msgs.append(wait);
+    try {
+      const res = await fetch(URL_, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: hist.slice(-6) }) });
+      const data = await res.json().catch(() => ({}));
+      wait.remove();
+      if (!res.ok || !data.reply) { add('err', data.error || '客服暫時無法回應，請稍後再試'); hist.pop(); }
+      else { add('bot', data.reply); hist.push({ role: 'model', text: data.reply }); }
+    } catch { wait.remove(); add('err', '網路連線失敗，請稍後再試'); hist.pop(); }
+    busy = false; send.disabled = false; inp.focus();
+  }
+  $('#chatForm').addEventListener('submit', (e) => { e.preventDefault(); ask(inp.value); });
+})();
 
 /* ---------- 啟動 ---------- */
 $('#asof').textContent = `資料時間 ${fmtDate(D.fetchedAt)}`;

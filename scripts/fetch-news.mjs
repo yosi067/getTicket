@@ -26,10 +26,9 @@ const FOREIGN_TITLE = /香港|紅館|啟德|亞博|九展|港站|港場|港開�
 const FOREIGN_HOST = /(^|\.)(hk|cn|mo|sg|my|jp|kr)$|hk01|mingpao|singtao|stheadline|hkej|on\.cc|now\.com|rthk|bastillepost|inmediahk|wenweipo|takungpao|thestandard|scmp|sina\.com|163\.com|sohu|qq\.com|ifeng|chinadaily|xinhua|people\.com\.cn|bbc\.com|cnn\.com|nikkei|yahoo\.co\.jp|dotdotnews|eastweek/i;
 const FOREIGN_SOURCE = /香港|明報|星島|信報|東方日報|頭條日報|大公|文匯|巴士的報|am730|澳門|新浪|網易|搜狐|騰訊|鳳凰|新華|人民網|南華早報|SCMP|Singtao|Sing Tao|dotdotnews|Eastweek|加拿大|美國|馬來西亞|新加坡/i;
 
-// 台灣訊號：標題出現台灣城市、場館、售票平台，或來源是台灣媒體
-const TW_TITLE = /台灣|臺灣|台北|臺北|新北|桃園|台中|臺中|台南|臺南|高雄|新竹|基隆|宜蘭|花蓮|台東|屏東|彰化|嘉義|苗栗|雲林|南投|小巨蛋|大巨蛋|南港|大佳河濱|北流|高流|TICC|Legacy|Zepp New Taipei|台北流行音樂中心|高雄流行音樂中心|國家音樂廳|國家戲劇院|兩廳院|拓元|tixCraft|KKTIX|寬宏|年代售票|Ticket ?Plus|遠大|OPENTIX|ibon|FamiPort|大港開唱|火球祭|簡單生活節|海洋音樂祭|貢寮/i;
-const TW_HOST = /\.tw$|(^|\.)(udn|ettoday|storm|nownews|thenewslens|mirrormedia|upmedia|setn|ftvnews|chinatimes|ltn|cna|tvbs|pts|cts|ttv|ebc|eranews|ctee|cw|businessweekly|gq|vogue|elle|marieclaire|harpersbazaar|bnext|techbang|mobile01|newtalk|ctwant|pchome|vecos|mtv)\.(com|net|org|mg|tw|com\.tw|tw)$/i;
-const TW_SOURCE = /自由時報|聯合新聞網|聯合報|中央社|ETtoday|三立|民視|中時|中國時報|TVBS|風傳媒|鏡報|鏡週刊|公視|華視|台視|東森|蘋果|新頭殼|上報|關鍵評論|天下|遠見|數位時代|噓!?星聞|CTWANT|NOWnews|Newtalk|PChome|緯來|FTNN|蕃新聞|MTV音樂頻道|台灣好新聞|信傳媒|太報|Hit FM|KKBOX|Vogue Taiwan|GQ Taiwan|Elle Taiwan/i;
+// 台灣媒體白名單：來源名稱或網域必須在名單內才收錄
+const TW_HOST = /\.tw$|(^|\.)(udn|ettoday|storm|nownews|thenewslens|mirrormedia|upmedia|setn|ftvnews|chinatimes|ltn|cna|tvbs|pts|cts|ttv|ebc|eranews|ctee|cw|businessweekly|gq|vogue|elle|marieclaire|harpersbazaar|bnext|techbang|mobile01|newtalk|ctwant|pchome|vecos|mtv|yahoo|line|rollingstone|taipeitimes|taiwannews|focustaiwan|ctee|money\.udn)\.(com|net|org|mg|tw|com\.tw|tw)$/i;
+const TW_SOURCE = /自由時報|聯合新聞網|聯合報|中央社|ETtoday|三立|民視|中時|中國時報|TVBS|風傳媒|鏡報|鏡週刊|公視|華視|台視|東森|蘋果|新頭殼|上報|關鍵評論|天下|遠見|數位時代|噓!?星聞|CTWANT|NOWnews|Newtalk|PChome|緯來|FTNN|蕃新聞|MTV音樂頻道|台灣好新聞|信傳媒|太報|Hit FM|KKBOX|Vogue Taiwan|GQ Taiwan|Elle Taiwan|Yahoo|LINE TODAY|Rolling Stone Taiwan|BAZAAR|CommonWealth|Business Today|自由娛樂|工商時報|經濟日報|科技新報|三立新聞|壹蘋|Newtalk新聞|民報|親子天下|PanSci|Taipei Times|Focus Taiwan|Taiwan News/i;
 
 const TOPICS = [
   ['黃牛與詐騙', /黃牛|詐騙|假票|退票|轉賣|轉售|票務糾紛|防詐/],
@@ -56,11 +55,11 @@ const attr = (block, name, a) => {
 const safeHttp = (u) => (/^https?:\/\//i.test(u) ? u : '');
 const hostOf = (u) => { try { return new URL(u).hostname.toLowerCase(); } catch { return ''; } };
 
-// 是否為台灣相關新聞：先排除海外，再要求有台灣訊號
+// 是否收錄：先排除非台灣來源與場次，再要求來源在台灣媒體白名單內
 export function isTaiwan({ title, source = '', sourceUrl = '' }) {
   const host = hostOf(sourceUrl);
   if (FOREIGN_TITLE.test(title) || FOREIGN_SOURCE.test(source) || (host && FOREIGN_HOST.test(host))) return false;
-  return TW_TITLE.test(title) || TW_SOURCE.test(source) || (host !== '' && TW_HOST.test(host));
+  return TW_SOURCE.test(source) || (host !== '' && TW_HOST.test(host));
 }
 
 export function parseRss(xml) {

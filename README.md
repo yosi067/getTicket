@@ -68,6 +68,7 @@ npm run pack    # 打包 zip
 - `site/index.html`：入口頁，風格與平台一致（淺色橘調）並帶動態效果：打字標題、開賣倒數、跑馬燈、數字滾動、捲動顯示。內容：
   - 現況分析：可點選交叉篩選，含總覽、交叉比對（類型×月份、地區×類型、平台×類型、場館×月份、類型×星期等熱力圖）、開賣與票價、資料品質。
   - 台灣演唱會新聞：聚焦台灣來源，並依主題分類。
+  - 客服小幫手（Gemini）：右下角聊天視窗，只回答活動資訊與網站用法；需先部署 `server/` 的 Worker，詳見 [server/README.md](server/README.md)。未設定 `CHAT_API_URL` 時不會顯示。
   - 「售票統整平台」放在 `app/`。
 - 本機預覽：`npm run site` 後開啟 `dist-site/index.html`（`npm run news` 抓新聞，`npm run site:build` 只重建）。
 - 自動部署：`.github/workflows/pages.yml` 於推送 `main`、每日 06:00（台灣）與手動觸發時，執行測試、更新快照與新聞、建置並部署。

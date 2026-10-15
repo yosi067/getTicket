@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  applyFilter, byMonth, byWeekday, cross, hotDates, insights, leadDays, medianPrice, priceBands, quality, saleHours, tally, toRows, upcomingSales,
+  applyFilter, byMonth, byWeekday, cross, hotDates, insights, leadDays, medianPrice, priceBands, quality, recentSales, saleHours, tally, toRows, upcomingSales,
 } from '../scripts/site-stats.mjs';
 import { classifyTopic, isTaiwan, mergeNews, parseRss } from '../scripts/fetch-news.mjs';
 import { formatShareText } from '../extension/shared/lib.js';
@@ -97,4 +97,10 @@ test('formatShareText：包含重點且略過空欄位', () => {
   assert.match(t, /地點：小巨蛋/);
   assert.match(t, /https:\/\/a\.example/);
   assert.doesNotMatch(t, /開賣：/);
+});
+
+test('recentSales：只取已開賣、最近的在前，且略過非表演類', () => {
+  const r = recentSales(evs, sale + 3 * H);
+  assert.deepEqual(r.map((x) => x.saleStart), [sale + 2 * H, sale]);
+  assert.equal(recentSales(evs, 0).length, 0);
 });

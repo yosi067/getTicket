@@ -51,7 +51,11 @@ export default {
         body: JSON.stringify(toGeminiBody(buildSystemPrompt(ctx, now), v.messages)),
         signal: AbortSignal.timeout(20000),
       });
-      if (!res.ok) { console.error('gemini status', res.status); return json({ error: '客服暫時無法回應，請稍後再試' }, 502, cors); }
+      if (!res.ok) {
+        const msg = String((await res.json().catch(() => ({})))?.error?.message ?? '').slice(0, 160);
+        console.error('gemini status', res.status, msg);
+        return json({ error: '客服暫時無法回應，請稍後再試', upstream: res.status, detail: msg }, 502, cors);
+      }
       const reply = extractReply(await res.json());
       if (!reply) return json({ reply: '我只能協助確認演唱會資訊與網站使用方式，請換個方式問問看。' }, 200, cors);
       return json({ reply }, 200, cors);

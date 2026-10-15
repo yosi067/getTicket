@@ -9,7 +9,7 @@ const now = Date.parse('2026-10-15T12:00:00+08:00');
 const events = [
   { title: '已結束的活動', category: '演唱會', platform: 'kktix', dateStart: '2026-09-01', dateEnd: '2026-09-01', venues: ['A'] },
   { title: '告五人演唱會', category: '演唱會', platform: 'tixcraft', dateStart: '2026-11-07', venues: ['臺北小巨蛋'], saleStarts: [Date.parse('2026-10-20T12:00:00+08:00')], priceMin: 800, priceMax: 4800, url: 'https://tixcraft.com/x' },
-  { title: '沒日期的活動|含分隔字元\n換行', category: '其他', platform: 'opentix', venues: [], url: 'javascript:alert(1)' },
+  { title: '沒日期的活動|含分隔字元\n換行', category: '音樂祭', platform: 'opentix', venues: [], url: 'javascript:alert(1)' },
 ];
 
 test('compactEvents：略過已結束、清掉分隔字元、不安全網址換成 -', () => {
@@ -131,4 +131,10 @@ test('splitFollowups：拆出追問行並限制數量與長度', () => {
   assert.equal(r.text, '結論一行\n第二行');
   assert.deepEqual(r.followups, ['高雄有什麼活動？', '怎麼加入行事曆？']);
   assert.deepEqual(splitFollowups('只有回答').followups, []);
+});
+
+test('compactEvents：只保留表演類活動', () => {
+  const r = compactEvents([{ title: '某課程', category: '課程講座', platform: 'kktix', dateStart: '2999-01-01' }, { title: '某演唱會', category: '演唱會', platform: 'kktix', dateStart: '2999-01-01' }], 0);
+  assert.equal(r.length, 1);
+  assert.ok(r[0].startsWith('某演唱會'));
 });

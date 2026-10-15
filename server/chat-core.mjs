@@ -14,8 +14,10 @@ const clean = (s) => String(s ?? '').replace(/[\r\n|]+/g, ' ').trim();
 const PLATFORM = { ticketplus: 'Ticket Plus', kktix: 'KKTIX', tixcraft: '拓元', opentix: 'OPENTIX' };
 
 // 把活動壓成一行一筆的短文字，降低 token 用量；已結束的活動不放
+const SHOW = new Set(['演唱會', '音樂祭', '舞台劇', '見面會']);
 export function compactEvents(events, now, limit = 400) {
   return events
+    .filter((e) => SHOW.has(e.category))
     .filter((e) => {
       const end = Date.parse(`${e.dateEnd ?? e.dateStart ?? ''}T23:59:59+08:00`);
       return Number.isNaN(end) || end >= now - 86400e3;

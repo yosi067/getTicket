@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TicketWar 成果報告｜把分散的售票資訊整合成一頁</title>
+<style>
+:root{--pri:#e8590c;--pl:#fff4e6;--txt:#2b2118;--mut:#6b5f55;--line:#f0e2d4}
+*{box-sizing:border-box}body{margin:0;font:16px/1.7 system-ui,"PingFang TC","Noto Sans TC",sans-serif;color:var(--txt);background:#fffaf5}
+.w{max-width:920px;margin:0 auto;padding:24px 18px 60px}
+h1{font-size:30px;margin:8px 0}h2{font-size:21px;margin:36px 0 12px;padding-left:10px;border-left:5px solid var(--pri)}
+.sub{color:var(--mut)}.nav a{color:var(--pri);font-weight:600;text-decoration:none;margin-right:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.big{font-size:34px;font-weight:800;color:var(--pri);line-height:1.2}.lab{color:var(--mut);font-size:14px}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;font-size:15px}th{background:var(--pl)}
+.bad{color:#c92a2a}.ok{color:#2b8a3e;font-weight:700}
+.step{display:flex;gap:12px;align-items:flex-start}.n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--pri);color:#fff;text-align:center;line-height:30px;font-weight:700}
+.note{background:var(--pl);border-radius:10px;padding:10px 14px;font-size:14px;color:var(--mut)}
+@media print{.nav{display:none}body{background:#fff}}
+</style>
+</head>
+<body><div class="w">
+<div class="nav"><a href="../">回到入口</a><a href="../app/">售票統整平台</a></div>
+<h1>TicketWar 成果報告</h1>
+<p class="sub">演唱會與售票資訊，不用再四處找：集中一頁、自動更新、AI 小幫手即時回答。</p>
+
+<h2>1. 痛點：資訊散落，只能靠自己記</h2>
+<div class="card">
+<ul>
+<li>演出與開賣資訊分散在 Ticket Plus、拓元、KKTIX、OPENTIX 四個售票網站。</li>
+<li>想要提醒，只能手動抄到記事本；除非朋友剛好告知，否則很容易錯過開賣。</li>
+<li>還得另外看新聞、逛社群，才知道加場、黃牛與詐騙等消息。</li>
+<li>每次要查一輪，每個網站約 5 分鐘，四個網站約 20 分鐘。</li>
+</ul></div>
+
+<h2>2. 解決方案</h2>
+<div class="g">
+<div class="card"><b>高度整合</b><div class="lab">四個平台的公開活動資料彙整在同一頁，可搜尋、篩選、排序。</div></div>
+<div class="card"><b>不用另開記事本</b><div class="lab">標記「想搶／已購」、加入行事曆（.ics），提醒就在同一處。</div></div>
+<div class="card"><b>新聞集中</b><div class="lab">只收台灣媒體，依「開賣搶票、加場、黃牛與詐騙」等主題分類。</div></div>
+<div class="card"><b>AI 小幫手</b><div class="lab">直接問「高雄有什麼活動？」，回答精簡並提示下一步可問什麼。</div></div>
+</div>
+
+<h2>3. 目前成果（實際數字）</h2>
+<div class="g">
+<div class="card"><div class="big">4</div><div class="lab">整合的售票平台</div></div>
+<div class="card"><div class="big">300+</div><div class="lab">彙整的活動筆數</div></div>
+<div class="card"><div class="big">每日</div><div class="lab">06:00 自動更新資料與新聞</div></div>
+<div class="card"><div class="big">0 元</div><div class="lab">網站與客服後端皆使用免費方案</div></div>
+</div>
+
+<h2>4. 量化效益（請換成自己的數字）</h2>
+<div class="note">以下「每週查詢次數」為示範假設，發表前請改成實際習慣。計算方式：每次時間 × 每週次數 × 13 週（一季）。</div>
+<table style="margin-top:12px">
+<tr><th></th><th>改善前</th><th>改善後</th></tr>
+<tr><td>每次查詢時間</td><td class="bad">5 分鐘 × 4 網站 = 20 分鐘</td><td class="ok">約 5 分鐘（一頁看完）</td></tr>
+<tr><td>每週 3 次（假設）</td><td class="bad">60 分鐘</td><td class="ok">15 分鐘</td></tr>
+<tr><td>每季（13 週）</td><td class="bad">約 13 小時</td><td class="ok">約 3.3 小時</td></tr>
+<tr><td>省下</td><td colspan="2" class="ok">每次省 15 分鐘（75%）；每季約 9.8 小時</td></tr>
+<tr><td>提醒方式</td><td class="bad">手動抄記事本、靠朋友告知</td><td class="ok">同一處標記並加入行事曆</td></tr>
+<tr><td>新聞與社群</td><td class="bad">需另外逛</td><td class="ok">集中在入口頁</td></tr>
+</table>
+<p class="note">另一個難以量化但重要的效益：減少錯過開賣的機率。可在上線後記錄「一季內錯過的場次」作為追蹤指標。</p>
+
+<h2>5. 操作流程（現場展示）</h2>
+<div class="card">
+<div class="step"><span class="n">1</span><div>打開入口頁，看「下一場開賣倒數」與「現況分析」。</div></div><br>
+<div class="step"><span class="n">2</span><div>進入售票統整平台，搜尋地區或藝人，標記「想搶」，加入行事曆。</div></div><br>
+<div class="step"><span class="n">3</span><div>回到入口頁，點開 AI 小幫手，問「高雄有什麼活動？」，再點它建議的下一個問題。</div></div><br>
+<div class="step"><span class="n">4</span><div>在新聞區切到「黃牛與詐騙」，了解購票風險。</div></div>
+</div>
+
+<h2>6. 如何做出來</h2>
+<div class="card">
+<ul>
+<li>用 AI 協作開發：先寫需求，再逐步生成、測試、修正，全程有自動測試把關。</li>
+<li>資料由排程每日自動更新並部署到網頁，不需要人工維護。</li>
+<li>AI 小幫手只依網站資料回答，離題一律婉拒，資料沒有就明說不知道。</li>
+<li>金鑰只存放在後端，不出現在網頁或程式碼中。</li>
+</ul></div>
+
+<h2>7. 實施時程</h2>
+<table>
+<tr><th>階段</th><th>內容</th></tr>
+<tr><td>1–2 週</td><td>自己與少數朋友試用，收集回饋、校正資料</td></tr>
+<tr><td>3–4 週</td><td>加入開賣前通知（例如 Email 或 LINE）、補足缺漏平台</td></tr>
+<tr><td>5–8 週</td><td>擴大分享，依使用紀錄調整 AI 小幫手回答與常見問題</td></tr>
+</table>
+
+<h2>8. 風險與應對</h2>
+<table>
+<tr><th>風險</th><th>應對</th></tr>
+<tr><td>售票網站改版，資料抓不到</td><td>失敗時沿用舊資料並顯示更新時間；有測試可快速定位轉接器</td></tr>
+<tr><td>AI 回答不準確</td><td>限定資料範圍、不編造；回答提醒以官方公告為準；附官方連結</td></tr>
+<tr><td>AI 用量被濫用或超額</td><td>限定來源網站、每人每分鐘次數、字數與回覆長度；設定用量上限</td></tr>
+<tr><td>金鑰外洩</td><td>只放後端；外洩立即刪除重建</td></tr>
+<tr><td>資料版權與使用規範</td><td>只整理公開資訊並導向官方購票頁；不代購、不繞過驗證</td></tr>
+</table>
+
+<h2>9. 成功指標與追蹤</h2>
+<table>
+<tr><th>指標</th><th>怎麼看</th><th>頻率</th></tr>
+<tr><td>每次查詢時間</td><td>自己計時對比基線 20 分鐘</td><td>每月</td></tr>
+<tr><td>錯過的開賣場次</td><td>每季回顧</td><td>每季</td></tr>
+<tr><td>AI 小幫手有用率</td><td>隨機抽測 20 題的正確率</td><td>每月</td></tr>
+<tr><td>資料新鮮度</td><td>頁面底部的建置時間、每日更新是否成功</td><td>每週</td></tr>
+</table>
+
+<h2>10. 下一步</h2>
+<div class="card">開賣前自動通知、更多平台、依個人喜好推薦場次；把「整合＋AI 助理」的做法延伸到其他資訊分散的工作場景。</div>
+
+<p class="sub" style="margin-top:36px">資料來自各售票平台公開頁面，開賣時間與票價以官方公告為準。</p>
+</div></body></html>

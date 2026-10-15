@@ -37,6 +37,8 @@ await rm(out, { recursive: true, force: true });
 await mkdir(join(out, 'app'), { recursive: true });
 await writeFile(join(out, 'index.html'), tpl.replace('/*__DATA__*/null', () => safeJson(data)).replace('/*__STATS__*/', () => statsSrc).replace('/*__CHAT_URL__*/\'\'', () => JSON.stringify(chatUrl)));
 await copyFile(join(root, 'demo/ticketwar-web.html'), join(out, 'app/index.html'));
+await mkdir(join(out, 'report'), { recursive: true });
+await copyFile(join(root, 'site/report.html'), join(out, 'report/index.html'));
 await writeFile(join(out, '.nojekyll'), '');
 
 // 客服機器人的知識庫：網站說明 + 擴充功能手冊節錄 + 精簡活動清單

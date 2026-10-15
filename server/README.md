@@ -20,6 +20,13 @@ npx wrangler deploy
 把該網址設成 GitHub repo 的 Actions Variable：Settings → Secrets and variables → Actions → Variables → 新增 `CHAT_API_URL`，值為 `https://ticketwar-chat.<帳號>.workers.dev/chat`。
 下次部署後，首頁就會出現聊天按鈕（沒設定這個變數時不會顯示）。
 
+## 改用 Vercel（免 Cloudflare，可用 GitHub 登入）
+repo 內的 [api/chat.js](../api/chat.js) 是 Vercel 版函式，與 Worker 共用同一份核心邏輯。
+1. 到 vercel.com 用 GitHub 登入，Add New → Project → 匯入 `yosi067/getTicket`，其他設定保持預設（已有 `vercel.json`）。
+2. 專案 Settings → Environment Variables 新增 `GEMINI_API_KEY`（貼上新產生的金鑰，勾 Production），可選 `ALLOWED_ORIGIN`（預設 `https://yosi067.github.io`）。
+3. 重新部署（Deployments → Redeploy）。網址形如 `https://<專案>.vercel.app`。
+4. GitHub Actions Variable `CHAT_API_URL` 設為 `https://<專案>.vercel.app/api/chat`，重跑 Pages 部署。
+
 ## 建議再加的保護
 - Google AI Studio / Cloud 端設定每日用量上限與預算警示。
 - Cloudflare 儀表板 → Security → WAF → Rate limiting rules，對該 Worker 網址設定每 IP 速率限制（Worker 內的限流只是基本防護）。

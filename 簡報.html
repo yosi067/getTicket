@@ -27,36 +27,56 @@ th,td{padding:8px 12px;border-bottom:1px solid var(--line);text-align:left}th{ba
 </style>
 </head>
 <body>
-
 <section class="s">
 <div class="pri" style="font-weight:700">AI 協作開發成果發表</div>
-<h1>TicketWar<br>演唱會與售票資訊，一頁看完</h1>
-<p class="sub" style="margin-top:1em">整合四大售票平台＋台灣新聞＋AI 小幫手</p>
+<h1>把「無止盡的 Excel + Mail」<br>變成自動追蹤與提醒</h1>
+<p class="sub" style="margin-top:1em">以工作痛點為出發點，用售票資訊整合平台 TicketWar 做同類型實作</p>
 </section>
 
 <section class="s">
-<h2>背景與痛點</h2>
+<h2>企業痛點：採購料號追蹤</h2>
 <ul>
-<li>資訊散落在 Ticket Plus、拓元、KKTIX、OPENTIX 四個網站</li>
+<li>資料量大：非常多的採購料號需要持續追蹤</li>
+<li>流程仰賴複雜的 Excel + Mail，來回確認、無止盡</li>
+<li>公司雖有系統，但不好用</li>
+<li>料號太多，只能逐一查詢狀態</li>
+</ul>
+<p class="note">我所在的小組，工作就是持續協助各部門解決類似的問題。</p>
+</section>
+
+<section class="s">
+<h2>我們正在做的專案</h2>
+<div class="flow">
+<div class="c"><b>進入大型系統</b><br>自動化抓取特定資料與狀況</div><div class="a">→</div>
+<div class="c"><b>整理狀態</b><br>讓使用者一眼看到</div><div class="a">→</div>
+<div class="c"><b>主動提醒</b><br>協助提醒客戶</div>
+</div>
+<p class="note" style="margin-top:1.5em">公司系統與資料無法在此展示，因此改用「售票系統」做結構相同的實作，並結合近日所學的重點。</p>
+</section>
+
+<section class="s">
+<h2>為什麼選售票系統？問題結構一樣</h2>
+<table>
+<tr><th></th><th>公司採購追蹤</th><th>售票資訊（本次展示）</th></tr>
+<tr><td>資料來源</td><td>大型系統，不好用</td><td>四個售票網站，各自獨立</td></tr>
+<tr><td>追蹤對象</td><td>大量料號，逐一查</td><td>大量場次，逐站找</td></tr>
+<tr><td>現有做法</td><td>Excel + Mail</td><td>記事本 + 朋友通知</td></tr>
+<tr><td>我想要的</td><td>自動抓取＋狀態總覽＋提醒</td><td>自動彙整＋總覽＋提醒＋AI 問答</td></tr>
+</table>
+</section>
+
+<section class="s">
+<h2>售票版的痛點（可量化）</h2>
+<ul>
+<li>Ticket Plus、拓元、KKTIX、OPENTIX 各看一次</li>
 <li>提醒只能手動打到記事本，除非朋友及時告知，否則容易錯過</li>
-<li>還要另外看新聞、逛社群，才知道加場、黃牛與詐騙</li>
+<li>還要另外看新聞、逛社群</li>
 </ul>
 <div class="g">
-<div class="c"><div class="big">5 分鐘</div><div class="lab">每個網站看一輪</div></div>
+<div class="c"><div class="big">5 分鐘</div><div class="lab">每個網站</div></div>
 <div class="c"><div class="big">× 4 站</div><div class="lab">四個平台</div></div>
 <div class="c"><div class="big">= 20 分鐘</div><div class="lab">每次查詢</div></div>
 </div>
-</section>
-
-<section class="s">
-<h2>現況：資訊分散，靠人力記</h2>
-<div class="flow">
-<div class="c">逐一打開<br>四個網站</div><div class="a">→</div>
-<div class="c">手動抄<br>記事本</div><div class="a">→</div>
-<div class="c">另外看<br>新聞與社群</div><div class="a">→</div>
-<div class="c">仍可能<br>錯過開賣</div>
-</div>
-<p class="note" style="margin-top:1.5em">我的做法：集中在一個網站，由系統每日自動更新，再加上 AI 小幫手即時回答。</p>
 </section>
 
 <section class="s">
@@ -67,77 +87,72 @@ th,td{padding:8px 12px;border-bottom:1px solid var(--line);text-align:left}th{ba
 <div class="shot">截圖：AI 小幫手對話與建議下一題</div>
 </div>
 <ul style="margin-top:.8em;font-size:.85em">
-<li>搜尋地區與藝人，標記「想搶」並加入行事曆</li>
-<li>問「高雄有什麼活動？」，再點建議的下一題</li>
-<li>新聞切到「黃牛與詐騙」</li>
+<li>自動抓取：每日更新，不用逐站查</li>
+<li>集中總覽與提醒：標記「想搶」、加入行事曆</li>
+<li>AI 小幫手：問「高雄有什麼活動？」，再點建議的下一題</li>
 </ul>
 </section>
 
 <section class="s">
-<h2>解決方案與流程</h2>
+<h2>做法與流程</h2>
 <div class="flow">
-<div class="c"><b>每日 06:00</b><br>自動抓取四平台與新聞</div><div class="a">→</div>
+<div class="c"><b>每日 06:00</b><br>自動抓取各平台與新聞</div><div class="a">→</div>
 <div class="c"><b>整理</b><br>分類、去重、檢查</div><div class="a">→</div>
-<div class="c"><b>發佈網頁</b><br>免費託管、自動部署</div><div class="a">→</div>
-<div class="c"><b>使用</b><br>搜尋、標記、問 AI</div>
+<div class="c"><b>發佈網頁</b><br>自動部署</div><div class="a">→</div>
+<div class="c"><b>使用</b><br>搜尋、提醒、問 AI</div>
 </div>
-<div class="g">
-<div class="c"><b>高度整合</b><div class="lab">四平台集中一頁</div></div>
-<div class="c"><b>不用另開記事本</b><div class="lab">標記與行事曆提醒</div></div>
-<div class="c"><b>新聞集中</b><div class="lab">只收台灣媒體</div></div>
-</div>
+<p class="note">同樣的流程可直接套回公司情境：抓取料號狀態 → 整理 → 儀表板與提醒。</p>
 </section>
 
 <section class="s">
 <h2>量化效益</h2>
 <table>
 <tr><th></th><th>改善前</th><th>改善後</th></tr>
-<tr><td>每次查詢</td><td class="bad">5 分 × 4 = 20 分鐘</td><td class="ok">約 5 分鐘</td></tr>
-<tr><td>每週 3 次</td><td class="bad">60 分鐘</td><td class="ok">15 分鐘</td></tr>
-<tr><td>每季（13 週）</td><td class="bad">約 13 小時</td><td class="ok">約 3.3 小時</td></tr>
-<tr><td>省下</td><td colspan="2" class="ok">每次 75%，每季約 9.8 小時</td></tr>
+<tr><td>售票：每次查詢</td><td class="bad">5 分 × 4 = 20 分鐘</td><td class="ok">約 5 分鐘</td></tr>
+<tr><td>每週 3 次（假設）</td><td class="bad">60 分鐘</td><td class="ok">15 分鐘</td></tr>
+<tr><td>每季（13 週）</td><td class="bad">約 13 小時</td><td class="ok">約 3.3 小時，省 9.8 小時</td></tr>
+<tr><td>公司：逐一查詢料號</td><td class="bad">每次 X 分鐘 × 每天 N 次（待實測）</td><td class="ok">自動更新，只看異常</td></tr>
 </table>
-<p class="note">每週次數為假設值；另追蹤「錯過開賣場次」。</p>
+<p class="note">售票數字為示範假設；公司情境待專案上線後實測。</p>
 </section>
 
 <section class="s">
 <h2>時程與資源</h2>
 <table>
 <tr><th>階段</th><th>內容</th></tr>
-<tr><td>1–2 週</td><td>自己與少數朋友試用，校正資料</td></tr>
-<tr><td>3–4 週</td><td>開賣前通知、補足缺漏平台</td></tr>
-<tr><td>5–8 週</td><td>擴大分享，調整 AI 回答</td></tr>
+<tr><td>1–2 週</td><td>小範圍試用，校正資料與欄位</td></tr>
+<tr><td>3–4 週</td><td>加入自動提醒、補足缺漏資料</td></tr>
+<tr><td>5–8 週</td><td>擴大到更多使用者，依回饋調整</td></tr>
 </table>
-<p style="margin-top:.8em">資源：免費網頁託管、免費排程、AI 免費額度；人力為自己，AI 協助開發。</p>
+<p style="margin-top:.8em">資源：免費網頁託管、免費排程、AI 免費額度；人力為小組成員，AI 協助開發。</p>
 </section>
 
 <section class="s">
 <h2>風險與應對</h2>
 <table>
 <tr><th>風險</th><th>應對</th></tr>
-<tr><td>售票網站改版，資料抓不到</td><td>沿用舊資料並標示更新時間；有測試快速定位</td></tr>
-<tr><td>AI 回答不準確</td><td>限定資料範圍、不編造，並以官方公告為準</td></tr>
-<tr><td>用量被濫用、金鑰外洩</td><td>金鑰只放後端；限流、限來源；外洩即重建</td></tr>
+<tr><td>來源系統或網站改版，抓取失敗</td><td>沿用舊資料並標示更新時間；有測試快速定位</td></tr>
+<tr><td>AI 回答不準確</td><td>限定資料範圍、不編造，以官方或原系統為準</td></tr>
+<tr><td>資料安全與金鑰外洩（公司情境更重要）</td><td>金鑰只放後端；限流、限權限；只取必要欄位</td></tr>
 </table>
 </section>
 
 <section class="s">
 <h2>成功指標</h2>
 <div class="g">
-<div class="c"><div class="big">≤ 5 分</div><div class="lab">每次查詢時間（基線 20 分）</div></div>
-<div class="c"><div class="big">↓</div><div class="lab">每季錯過的開賣場次</div></div>
+<div class="c"><div class="big">↓</div><div class="lab">每次查詢時間（售票基線 20 分）</div></div>
+<div class="c"><div class="big">↓</div><div class="lab">漏看或延誤的提醒次數</div></div>
 <div class="c"><div class="big">20 題</div><div class="lab">AI 抽測正確率</div></div>
 <div class="c"><div class="big">每日</div><div class="lab">資料更新成功</div></div>
 </div>
-<p class="note">限制：公開資料沒有未來開賣時間與庫存，倒數顯示「最近一場開賣」；一律以官方公告為準。</p>
 </section>
 
 <section class="s">
 <h1>總結</h1>
 <ul style="margin-top:.6em">
-<li>以前：4 站 × 5 分鐘，靠記事本與朋友提醒</li>
-<li>現在：一頁整合，每次約 5 分鐘，再加 AI 小幫手</li>
-<li>下一步：開賣前通知、更多平台、個人化推薦</li>
+<li>痛點：大量項目 + Excel/Mail + 難用的系統</li>
+<li>做法：自動抓取、集中總覽、主動提醒、AI 問答</li>
+<li>今天用售票系統驗證，下一步套用到公司的採購追蹤</li>
 </ul>
 <p class="pri" style="margin-top:1em;font-size:1.4em;font-weight:700">Q&amp;A，謝謝</p>
 </section>

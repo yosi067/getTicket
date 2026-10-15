@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TicketWar 簡報</title>
+<style>
+:root{--pri:#e8590c;--pl:#fff4e6;--txt:#2b2118;--mut:#6b5f55;--line:#f0e2d4}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;overflow:hidden;background:#2b2118;font:20px/1.6 system-ui,"PingFang TC","Noto Sans TC",sans-serif;color:var(--txt)}
+.s{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;padding:5vh 8vw;background:#fffaf5}
+.s.on{display:flex}
+h1{font-size:3.2em;line-height:1.2}h2{font-size:2em;margin-bottom:.5em;padding-left:.4em;border-left:.15em solid var(--pri)}
+.sub{color:var(--mut)}.pri{color:var(--pri)}
+ul{padding-left:1.2em}li{margin:.3em 0}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:.6em}
+.c{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 20px}
+.big{font-size:2.4em;font-weight:800;color:var(--pri);line-height:1.2}.lab{color:var(--mut);font-size:.8em}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;font-size:.85em}
+th,td{padding:8px 12px;border-bottom:1px solid var(--line);text-align:left}th{background:var(--pl)}
+.bad{color:#c92a2a}.ok{color:#2b8a3e;font-weight:700}
+.shot{border:2px dashed var(--pri);border-radius:12px;background:var(--pl);color:var(--mut);display:flex;align-items:center;justify-content:center;min-height:22vh;text-align:center;padding:10px;font-size:.8em}
+.flow{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;margin-top:.6em}
+.flow .c{flex:1;min-width:150px;text-align:center}.flow .a{align-self:center;color:var(--pri);font-size:1.4em}
+.n{position:fixed;right:20px;bottom:12px;color:var(--mut);font-size:14px;z-index:9}
+.note{font-size:.7em;color:var(--mut);margin-top:.8em}
+</style>
+</head>
+<body>
+
+<section class="s">
+<div class="pri" style="font-weight:700">AI 協作開發成果發表</div>
+<h1>TicketWar<br>演唱會與售票資訊，一頁看完</h1>
+<p class="sub" style="margin-top:1em">整合四大售票平台＋台灣新聞＋AI 小幫手</p>
+</section>
+
+<section class="s">
+<h2>背景與痛點</h2>
+<ul>
+<li>資訊散落在 Ticket Plus、拓元、KKTIX、OPENTIX 四個網站</li>
+<li>提醒只能手動打到記事本，除非朋友及時告知，否則容易錯過</li>
+<li>還要另外看新聞、逛社群，才知道加場、黃牛與詐騙</li>
+</ul>
+<div class="g">
+<div class="c"><div class="big">5 分鐘</div><div class="lab">每個網站看一輪</div></div>
+<div class="c"><div class="big">× 4 站</div><div class="lab">四個平台</div></div>
+<div class="c"><div class="big">= 20 分鐘</div><div class="lab">每次查詢</div></div>
+</div>
+</section>
+
+<section class="s">
+<h2>現況：資訊分散，靠人力記</h2>
+<div class="flow">
+<div class="c">逐一打開<br>四個網站</div><div class="a">→</div>
+<div class="c">手動抄<br>記事本</div><div class="a">→</div>
+<div class="c">另外看<br>新聞與社群</div><div class="a">→</div>
+<div class="c">仍可能<br>錯過開賣</div>
+</div>
+<p class="note" style="margin-top:1.5em">我的做法：集中在一個網站，由系統每日自動更新，再加上 AI 小幫手即時回答。</p>
+</section>
+
+<section class="s">
+<h2>現場展示</h2>
+<div class="g">
+<div class="shot">截圖：入口頁（倒數、現況分析、新聞）</div>
+<div class="shot">截圖：統整平台（搜尋、想搶標記、行事曆）</div>
+<div class="shot">截圖：AI 小幫手對話與建議下一題</div>
+</div>
+<ul style="margin-top:.8em;font-size:.85em">
+<li>搜尋地區與藝人，標記「想搶」並加入行事曆</li>
+<li>問「高雄有什麼活動？」，再點建議的下一題</li>
+<li>新聞切到「黃牛與詐騙」</li>
+</ul>
+</section>
+
+<section class="s">
+<h2>解決方案與流程</h2>
+<div class="flow">
+<div class="c"><b>每日 06:00</b><br>自動抓取四平台與新聞</div><div class="a">→</div>
+<div class="c"><b>整理</b><br>分類、去重、檢查</div><div class="a">→</div>
+<div class="c"><b>發佈網頁</b><br>免費託管、自動部署</div><div class="a">→</div>
+<div class="c"><b>使用</b><br>搜尋、標記、問 AI</div>
+</div>
+<div class="g">
+<div class="c"><b>高度整合</b><div class="lab">四平台集中一頁</div></div>
+<div class="c"><b>不用另開記事本</b><div class="lab">標記與行事曆提醒</div></div>
+<div class="c"><b>新聞集中</b><div class="lab">只收台灣媒體</div></div>
+</div>
+</section>
+
+<section class="s">
+<h2>量化效益</h2>
+<table>
+<tr><th></th><th>改善前</th><th>改善後</th></tr>
+<tr><td>每次查詢</td><td class="bad">5 分 × 4 = 20 分鐘</td><td class="ok">約 5 分鐘</td></tr>
+<tr><td>每週 3 次</td><td class="bad">60 分鐘</td><td class="ok">15 分鐘</td></tr>
+<tr><td>每季（13 週）</td><td class="bad">約 13 小時</td><td class="ok">約 3.3 小時</td></tr>
+<tr><td>省下</td><td colspan="2" class="ok">每次 75%，每季約 9.8 小時</td></tr>
+</table>
+<p class="note">每週次數為假設值；另追蹤「錯過開賣場次」。</p>
+</section>
+
+<section class="s">
+<h2>時程與資源</h2>
+<table>
+<tr><th>階段</th><th>內容</th></tr>
+<tr><td>1–2 週</td><td>自己與少數朋友試用，校正資料</td></tr>
+<tr><td>3–4 週</td><td>開賣前通知、補足缺漏平台</td></tr>
+<tr><td>5–8 週</td><td>擴大分享，調整 AI 回答</td></tr>
+</table>
+<p style="margin-top:.8em">資源：免費網頁託管、免費排程、AI 免費額度；人力為自己，AI 協助開發。</p>
+</section>
+
+<section class="s">
+<h2>風險與應對</h2>
+<table>
+<tr><th>風險</th><th>應對</th></tr>
+<tr><td>售票網站改版，資料抓不到</td><td>沿用舊資料並標示更新時間；有測試快速定位</td></tr>
+<tr><td>AI 回答不準確</td><td>限定資料範圍、不編造，並以官方公告為準</td></tr>
+<tr><td>用量被濫用、金鑰外洩</td><td>金鑰只放後端；限流、限來源；外洩即重建</td></tr>
+</table>
+</section>
+
+<section class="s">
+<h2>成功指標</h2>
+<div class="g">
+<div class="c"><div class="big">≤ 5 分</div><div class="lab">每次查詢時間（基線 20 分）</div></div>
+<div class="c"><div class="big">↓</div><div class="lab">每季錯過的開賣場次</div></div>
+<div class="c"><div class="big">20 題</div><div class="lab">AI 抽測正確率</div></div>
+<div class="c"><div class="big">每日</div><div class="lab">資料更新成功</div></div>
+</div>
+<p class="note">限制：公開資料沒有未來開賣時間與庫存，倒數顯示「最近一場開賣」；一律以官方公告為準。</p>
+</section>
+
+<section class="s">
+<h1>總結</h1>
+<ul style="margin-top:.6em">
+<li>以前：4 站 × 5 分鐘，靠記事本與朋友提醒</li>
+<li>現在：一頁整合，每次約 5 分鐘，再加 AI 小幫手</li>
+<li>下一步：開賣前通知、更多平台、個人化推薦</li>
+</ul>
+<p class="pri" style="margin-top:1em;font-size:1.4em;font-weight:700">Q&amp;A，謝謝</p>
+</section>
+
+<div class="n" id="n"></div>
+<script>
+const S=[...document.querySelectorAll('.s')];let i=0;
+function go(k){i=Math.max(0,Math.min(S.length-1,k));S.forEach((e,j)=>e.classList.toggle('on',j===i));n.textContent=(i+1)+' / '+S.length;location.hash=i+1}
+addEventListener('keydown',e=>{if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key))go(i+1);if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key))go(i-1)});
+addEventListener('click',e=>go(e.clientX>innerWidth/3?i+1:i-1));
+go((parseInt(location.hash.slice(1))||1)-1);
+</script>
+</body></html>

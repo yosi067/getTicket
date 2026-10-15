@@ -656,7 +656,7 @@ function setupScroll() {
   async function ask(text) {
     text = text.trim();
     if (!text || busy) return;
-    quick.remove(); busy = true; send.disabled = true; inp.value = '';
+    quick.remove(); msgs.querySelectorAll('.quick').forEach((n) => n.remove()); busy = true; send.disabled = true; inp.value = '';
     add('me', text); hist.push({ role: 'user', text });
     const wait = el('div', { class: 'msg bot typing' }, el('span'), el('span'), el('span')); msgs.append(wait);
     try {
@@ -664,7 +664,11 @@ function setupScroll() {
       const data = await res.json().catch(() => ({}));
       wait.remove();
       if (!res.ok || !data.reply) { add('err', data.error || '客服暫時無法回應，請稍後再試'); hist.pop(); }
-      else { add('bot', data.reply); hist.push({ role: 'model', text: data.reply }); }
+      else {
+        add('bot', data.reply); hist.push({ role: 'model', text: data.reply });
+        const fu = (Array.isArray(data.followups) ? data.followups : []).filter((q) => typeof q === 'string' && q.length <= 30).slice(0, 2);
+        if (fu.length) { const row = el('div', { class: 'quick' }, fu.map((q) => el('button', { type: 'button', text: q, onclick: () => { row.remove(); ask(q); } }))); msgs.append(row); msgs.scrollTop = msgs.scrollHeight; }
+      }
     } catch { wait.remove(); add('err', '網路連線失敗，請稍後再試'); hist.pop(); }
     busy = false; send.disabled = false; inp.focus();
   }

@@ -95,7 +95,7 @@ test('Worker：正常流程帶金鑰標頭、系統提示含活動資料，且�
     const res = await worker.fetch(post({ messages: [{ role: 'user', text: '最近有什麼演唱會？' }] }, undefined, { ip: '3.3.3.3' }), env);
     assert.equal(res.status, 200);
     const text = await res.text();
-    assert.deepEqual(JSON.parse(text), { reply: '這是回覆' });
+    assert.deepEqual(JSON.parse(text), { reply: '這是回覆', followups: [] });
     assert.ok(!text.includes('test-key'));
     assert.equal(res.headers.get('Access-Control-Allow-Origin'), 'https://site.example');
     const g = calls.find((c) => c.url.includes('generativelanguage'));
@@ -123,4 +123,12 @@ test('Worker：超過速率限制回 429', async () => {
     for (let i = 0; i < 10; i++) last = await worker.fetch(post({ messages: [{ role: 'user', text: 'hi' }] }, undefined, { ip: '5.5.5.5' }), env);
     assert.equal(last.status, 429);
   } finally { globalThis.fetch = realFetch; }
+});
+
+import { splitFollowups } from '../server/chat-core.mjs';
+test('splitFollowups：拆出追問行並限制數量與長度', () => {
+  const r = splitFollowups('結論一行\n第二行\n[[Q]] 高雄有什麼活動？ | 怎麼加入行事曆？ | 第三個');
+  assert.equal(r.text, '結論一行\n第二行');
+  assert.deepEqual(r.followups, ['高雄有什麼活動？', '怎麼加入行事曆？']);
+  assert.deepEqual(splitFollowups('只有回答').followups, []);
 });

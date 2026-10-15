@@ -1,7 +1,7 @@
 // Cloudflare Worker：客服機器人代理。金鑰只存在 Worker 的 Secret（GEMINI_API_KEY），前端與 repo 都不會有。
 // 部署與設定見 server/README.md
 import {
-  buildSystemPrompt, corsHeaders, extractReply, rateLimit, sanitizeMessages, toGeminiBody,
+  buildSystemPrompt, corsHeaders, extractReply, rateLimit, sanitizeMessages, splitFollowups, toGeminiBody,
 } from './chat-core.mjs';
 
 const limits = new Map();
@@ -58,7 +58,8 @@ export default {
       }
       const reply = extractReply(await res.json());
       if (!reply) return json({ reply: '我只能協助確認演唱會資訊與網站使用方式，請換個方式問問看。' }, 200, cors);
-      return json({ reply }, 200, cors);
+      const { text, followups } = splitFollowups(reply);
+      return json({ reply: text || reply, followups }, 200, cors);
     } catch (e) {
       console.error('chat error', e?.message);
       return json({ error: '客服暫時無法回應，請稍後再試' }, 502, cors);

@@ -35,7 +35,7 @@ if (!tpl.includes('/*__LIB__*/') || !tpl.includes('/*__SNAPSHOT__*/null')) throw
 const html = tpl.replace('/*__LIB__*/', () => lib).replace('/*__SNAPSHOT__*/null', () => json);
 
 const markers = /<!--\/?LITE:OFF-->/g;
-const full = html.replace(markers, '');
+const full = html.replace(markers, '').replace(/<!--WEB:ON-->[\s\S]*?<!--\/WEB:ON-->/g, '');
 const out = join(root, 'demo/ticketwar.html');
 await writeFile(out, full);
 console.log(`已輸出 ${out}（${(full.length / 1024).toFixed(0)} KB，${data.events.length} 筆活動）`);
@@ -51,6 +51,7 @@ const keep = [...snap.events.filter(hasSale), ...rest.slice(0, 40)].map((e) => {
 const liteData = { fetchedAt: snap.fetchedAt, source: 'snapshot', sources: snap.sources, events: keep };
 const liteJson = JSON.stringify(liteData).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
 const liteHtml = tpl
+  .replace(/<!--WEB:ON-->[\s\S]*?<!--\/WEB:ON-->/g, '')
   .replace(/<!--LITE:OFF-->[\s\S]*?<!--\/LITE:OFF-->/g, '')
   .replace('TicketWar Pro｜', 'TicketWar Pro Lite｜')
   .replace('/*__LIB__*/', () => lib)
@@ -61,6 +62,7 @@ console.log(`已輸出 ${liteOut}（${(liteHtml.length / 1024).toFixed(0)} KB，
 
 // ---- 網頁版（GitHub Pages）：完整活動資料，但移除需要本機伺服器的「重新抓取」與題庫編輯 ----
 const webHtml = tpl
+  .replace(/<!--\/?WEB:ON-->/g, '')
   .replace(/<!--LITE:OFF-->[\s\S]*?<!--\/LITE:OFF-->/g, '')
   .replace('/*__LIB__*/', () => lib)
   .replace('/*__SNAPSHOT__*/null', () => json);

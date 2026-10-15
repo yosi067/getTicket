@@ -75,7 +75,7 @@ export function toGeminiBody(system, messages) {
   return {
     systemInstruction: { parts: [{ text: system }] },
     contents: messages.map((m) => ({ role: m.role, parts: [{ text: m.text }] })),
-    generationConfig: { temperature: 0.3, maxOutputTokens: MAX_REPLY_TOKENS, thinkingConfig: { thinkingBudget: 0 } },
+    generationConfig: { temperature: 0.3, maxOutputTokens: MAX_REPLY_TOKENS },
   };
 }
 

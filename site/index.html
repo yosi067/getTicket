@@ -3,141 +3,703 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TicketWar｜演唱會與售票資訊入口</title>
-<meta name="description" content="整合 Ticket Plus、拓元、KKTIX、OPENTIX 的活動資料，提供現況分析、最新演唱會新聞與售票統整平台。">
+<title>TicketWar｜台灣演唱會與售票資訊入口</title>
+<meta name="description" content="整合 Ticket Plus、拓元、KKTIX、OPENTIX 的公開活動資料：互動式現況分析與交叉比對、台灣演唱會新聞、售票統整平台，以及 AI 導入課程精華。">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
-:root { --bg:#0f172a; --card:#1e293b; --line:#334155; --txt:#e2e8f0; --mute:#94a3b8; --pri:#6366f1; --pri2:#818cf8; }
-* { box-sizing: border-box; }
-body { margin:0; background:var(--bg); color:var(--txt); font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","PingFang TC",sans-serif; }
-a { color:var(--pri2); text-decoration:none; } a:hover { text-decoration:underline; }
-.wrap { max-width:1100px; margin:0 auto; padding:0 16px; }
-header.top { border-bottom:1px solid var(--line); }
-header.top .wrap { display:flex; align-items:center; gap:16px; height:56px; }
-header.top b { font-size:18px; } header.top nav { margin-left:auto; display:flex; gap:16px; font-size:14px; }
-.hero { padding:48px 0 28px; text-align:center; }
-.hero h1 { margin:0 0 8px; font-size:34px; } .hero p { margin:0 auto 22px; color:var(--mute); max-width:640px; }
-.btn { display:inline-block; padding:10px 20px; border-radius:10px; font-weight:600; background:var(--pri); color:#fff; margin:4px; }
-.btn:hover { background:#4f46e5; text-decoration:none; } .btn.alt { background:var(--card); border:1px solid var(--line); }
-.kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:8px 0 8px; }
-.kpi { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; text-align:center; }
-.kpi b { display:block; font-size:26px; } .kpi span { color:var(--mute); font-size:13px; }
-h2 { margin:36px 0 12px; font-size:22px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-h2 small { font-size:13px; color:var(--mute); font-weight:400; }
-.seg { margin-left:auto; display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
-.seg button { background:transparent; color:var(--mute); border:0; padding:6px 12px; cursor:pointer; font:inherit; font-size:13px; }
+:root {
+  --bg:#f4f5f7; --card:#fff; --line:#e5e8ec; --txt:#1f2328; --mute:#5f6872; --faint:#8a929b;
+  --pri:#e8590c; --pri-d:#c2470a; --pri-l:#fff1e8; --pri-m:#ffd8bf;
+  --c-concert:#e8590c; --c-fest:#f59f00; --c-play:#7048e8; --c-meet:#e64980; --c-class:#1c7ed6; --c-expo:#2f9e44; --c-other:#868e96;
+}
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; scroll-padding-top:72px; }
+body { margin:0; background:var(--bg); color:var(--txt); font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",sans-serif; -webkit-font-smoothing:antialiased; }
+a { color:var(--pri-d); text-decoration:none; } a:hover { text-decoration:underline; }
+button { font:inherit; cursor:pointer; }
+.wrap { max-width:1180px; margin:0 auto; padding:0 18px; }
+.mono { font-variant-numeric:tabular-nums; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+
+/* ---- 頂部 ---- */
+header.top { position:sticky; top:0; z-index:40; background:rgba(255,255,255,.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--line); }
+header.top .wrap { display:flex; align-items:center; gap:14px; height:60px; }
+.brand { display:flex; align-items:center; gap:8px; font-weight:800; font-size:18px; color:var(--txt); letter-spacing:.3px; }
+.brand i { color:var(--pri); } .brand b { color:var(--pri); }
+header.top nav { margin-left:auto; display:flex; align-items:center; gap:4px; }
+header.top nav a { color:var(--txt); padding:8px 12px; border-radius:8px; font-size:14px; font-weight:600; }
+header.top nav a:hover { background:var(--pri-l); text-decoration:none; color:var(--pri-d); }
+.cta { background:var(--pri); color:#fff !important; padding:9px 16px !important; box-shadow:0 4px 14px rgba(232,89,12,.3); }
+.cta:hover { background:var(--pri-d) !important; color:#fff !important; transform:translateY(-1px); }
+@media (max-width:720px) { header.top nav a:not(.cta) { display:none; } }
+.progress { position:absolute; left:0; bottom:-1px; height:3px; width:0; background:linear-gradient(90deg,var(--pri),#f59f00); }
+
+/* ---- Hero ---- */
+.hero { position:relative; overflow:hidden; background:linear-gradient(135deg,#fff7f0 0%,#fff 45%,#fff1e8 100%); border-bottom:1px solid var(--line); }
+.hero .wrap { position:relative; z-index:2; display:grid; grid-template-columns:1.25fr 1fr; gap:32px; padding-top:56px; padding-bottom:44px; align-items:center; }
+@media (max-width:900px) { .hero .wrap { grid-template-columns:1fr; padding-top:36px; } }
+.blob { position:absolute; border-radius:50%; filter:blur(50px); opacity:.55; animation:drift 14s ease-in-out infinite alternate; }
+.blob.a { width:360px; height:360px; background:#ffd8bf; top:-80px; left:-60px; }
+.blob.b { width:300px; height:300px; background:#ffe8a3; right:5%; top:30%; animation-delay:-5s; }
+.blob.c { width:240px; height:240px; background:#ffc9c9; bottom:-60px; left:35%; animation-delay:-9s; }
+@keyframes drift { to { transform:translate(40px,30px) scale(1.15); } }
+.float { position:absolute; color:var(--pri); opacity:.18; font-size:34px; animation:bob 6s ease-in-out infinite; z-index:1; }
+@keyframes bob { 0%,100% { transform:translateY(0) rotate(-8deg); } 50% { transform:translateY(-18px) rotate(8deg); } }
+.badge { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:999px; background:var(--pri-l); color:var(--pri-d); font-size:13px; font-weight:700; border:1px solid var(--pri-m); }
+.hero h1 { margin:14px 0 10px; font-size:clamp(30px,5vw,46px); line-height:1.2; letter-spacing:.5px; }
+.hero h1 .rot { color:var(--pri); border-right:3px solid var(--pri); padding-right:4px; animation:caret .8s steps(1) infinite; white-space:nowrap; }
+@keyframes caret { 50% { border-color:transparent; } }
+.hero p.lead { color:var(--mute); font-size:16px; max-width:560px; margin:0 0 22px; }
+.btn { display:inline-flex; align-items:center; gap:8px; padding:11px 22px; border-radius:10px; font-weight:700; background:var(--pri); color:#fff; border:0; margin:0 8px 8px 0; transition:transform .2s, box-shadow .2s, background .2s; box-shadow:0 6px 18px rgba(232,89,12,.28); }
+.btn:hover { background:var(--pri-d); text-decoration:none; transform:translateY(-2px); }
+.btn.alt { background:#fff; color:var(--txt); border:1px solid var(--line); box-shadow:none; }
+.btn.alt:hover { background:var(--pri-l); border-color:var(--pri-m); color:var(--pri-d); }
+.live { background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px 20px; box-shadow:0 10px 30px rgba(16,24,40,.08); position:relative; }
+.live::before { content:""; position:absolute; inset:-2px; border-radius:18px; z-index:-1; background:conic-gradient(from var(--ang,0deg),var(--pri),#f59f00,#ffd8bf,var(--pri)); animation:spin 6s linear infinite; }
+@property --ang { syntax:'<angle>'; inherits:false; initial-value:0deg; }
+@keyframes spin { to { --ang:360deg; } }
+.live .tag { font-size:12px; font-weight:800; color:var(--pri-d); letter-spacing:1px; display:flex; align-items:center; gap:8px; }
+.dot { width:8px; height:8px; border-radius:50%; background:#e03131; animation:pulse 1.4s infinite; }
+@keyframes pulse { 0% { box-shadow:0 0 0 0 rgba(224,49,49,.55); } 100% { box-shadow:0 0 0 10px rgba(224,49,49,0); } }
+.live h3 { margin:8px 0 2px; font-size:17px; line-height:1.4; }
+.live .meta { color:var(--mute); font-size:13px; }
+.cd { display:flex; gap:8px; margin-top:12px; }
+.cd div { flex:1; text-align:center; background:var(--bg); border-radius:10px; padding:8px 0; }
+.cd b { display:block; font-size:26px; line-height:1.1; color:var(--pri-d); }
+.cd span { font-size:11px; color:var(--mute); }
+.eq { display:flex; align-items:flex-end; gap:3px; height:22px; margin-top:14px; }
+.eq i { width:5px; background:linear-gradient(0deg,var(--pri),#f59f00); border-radius:2px; animation:eq 1s ease-in-out infinite; }
+.eq i:nth-child(2n) { animation-duration:.7s; } .eq i:nth-child(3n) { animation-duration:1.3s; } .eq i:nth-child(5n) { animation-duration:.9s; }
+@keyframes eq { 0%,100% { height:20%; } 50% { height:100%; } }
+
+.kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-top:-26px; position:relative; z-index:3; }
+.kpi { background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 16px; box-shadow:0 6px 18px rgba(16,24,40,.06); transition:transform .25s, box-shadow .25s; }
+.kpi:hover { transform:translateY(-4px); box-shadow:0 12px 26px rgba(16,24,40,.1); }
+.kpi b { display:block; font-size:30px; line-height:1.15; color:var(--pri-d); }
+.kpi span { color:var(--mute); font-size:13px; }
+.kpi i { color:var(--pri); margin-right:6px; }
+
+/* ---- 跑馬燈 ---- */
+.ticker { margin:22px 0 0; background:#fff; border:1px solid var(--line); border-radius:12px; overflow:hidden; display:flex; align-items:stretch; }
+.ticker .lab { background:var(--pri); color:#fff; padding:0 14px; display:flex; align-items:center; font-weight:700; font-size:13px; white-space:nowrap; gap:6px; }
+.ticker .tk { overflow:hidden; flex:1; mask-image:linear-gradient(90deg,transparent,#000 24px,#000 calc(100% - 24px),transparent); }
+.ticker .belt { display:inline-flex; gap:34px; padding:10px 0; white-space:nowrap; animation:belt 50s linear infinite; }
+.ticker:hover .belt { animation-play-state:paused; }
+@keyframes belt { to { transform:translateX(-50%); } }
+.ticker a { color:var(--txt); font-size:14px; } .ticker a small { color:var(--mute); margin-left:6px; }
+
+/* ---- 區塊標題 ---- */
+section.blk { padding-top:54px; }
+h2.sec { margin:0 0 6px; font-size:26px; display:flex; align-items:center; gap:10px; }
+h2.sec::before { content:""; width:6px; height:26px; border-radius:3px; background:linear-gradient(var(--pri),#f59f00); }
+p.sub { margin:0 0 18px; color:var(--mute); }
+
+/* ---- 卡片 ---- */
+.card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 18px; box-shadow:0 1px 3px rgba(16,24,40,.06); transition:transform .25s, box-shadow .25s, border-color .25s; position:relative; }
+.card:hover { transform:translateY(-3px); box-shadow:0 12px 26px rgba(16,24,40,.09); border-color:var(--pri-m); }
+.card h3 { margin:0 0 12px; font-size:15px; display:flex; align-items:center; gap:8px; }
+.card h3 i { color:var(--pri); } .card h3 small { margin-left:auto; color:var(--faint); font-weight:400; font-size:12px; }
+.grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:14px; }
+.grid3 { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; }
+.note { color:var(--mute); font-size:13px; margin:0 0 10px; }
+.empty { color:var(--faint); font-size:13px; padding:12px 0; }
+
+/* ---- 篩選列 ---- */
+.bar { position:sticky; top:60px; z-index:20; background:rgba(244,245,247,.94); backdrop-filter:blur(6px); padding:10px 0; margin-bottom:10px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.seg { display:inline-flex; background:#fff; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+.seg button { border:0; background:transparent; padding:7px 14px; font-size:13px; color:var(--mute); font-weight:600; transition:background .2s,color .2s; }
+.seg button:hover { background:var(--pri-l); }
 .seg button.on { background:var(--pri); color:#fff; }
-.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:14px; }
-.card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
-.card h3 { margin:0 0 10px; font-size:15px; }
-.row { display:grid; grid-template-columns:minmax(70px,120px) 1fr 36px; gap:8px; align-items:center; font-size:13px; margin:5px 0; }
+.chip { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; background:var(--pri-l); border:1px solid var(--pri-m); color:var(--pri-d); border-radius:999px; font-size:13px; font-weight:600; animation:pop .3s both; cursor:pointer; }
+.chip:hover { background:var(--pri-m); }
+.hint { color:var(--faint); font-size:12px; margin-left:auto; }
+.tabs { display:flex; gap:4px; border-bottom:2px solid var(--line); margin:6px 0 14px; position:relative; overflow-x:auto; }
+.tabs button { background:none; border:0; padding:10px 16px; font-weight:700; color:var(--mute); position:relative; white-space:nowrap; }
+.tabs button.on { color:var(--pri-d); }
+.tabs button.on::after { content:""; position:absolute; left:8px; right:8px; bottom:-2px; height:3px; background:var(--pri); border-radius:2px; animation:grow .3s both; }
+@keyframes grow { from { transform:scaleX(0); } }
+@keyframes pop { from { opacity:0; transform:scale(.85); } }
+@keyframes fadeup { from { opacity:0; transform:translateY(10px); } }
+
+.ins { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:8px; margin-bottom:14px; }
+.ins div { background:#fff; border:1px solid var(--line); border-left:4px solid var(--pri); border-radius:10px; padding:9px 12px; font-size:14px; animation:fadeup .5s both; }
+.ins div i { color:var(--pri); margin-right:6px; }
+
+/* ---- 圖表 ---- */
+.row { display:grid; grid-template-columns:minmax(64px,118px) 1fr 40px; gap:8px; align-items:center; font-size:13px; margin:6px 0; padding:2px 4px; border-radius:6px; cursor:pointer; transition:background .15s; }
+.row:hover { background:var(--pri-l); } .row.on { background:var(--pri-l); font-weight:700; outline:1px solid var(--pri-m); }
 .row .nm { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .row .n { text-align:right; color:var(--mute); }
-.bar { background:#0b1220; border-radius:4px; height:12px; overflow:hidden; } .bar i { display:block; height:100%; background:linear-gradient(90deg,var(--pri),var(--pri2)); }
-.months { display:flex; align-items:flex-end; gap:4px; height:150px; margin-top:6px; }
-.months div { flex:1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; height:100%; font-size:11px; color:var(--mute); }
-.months i { display:block; width:100%; background:linear-gradient(0deg,var(--pri),var(--pri2)); border-radius:3px 3px 0 0; min-height:2px; }
-.empty { color:var(--mute); font-size:13px; }
-ul.list { list-style:none; margin:0; padding:0; } ul.list li { padding:10px 0; border-bottom:1px solid var(--line); }
-ul.list li:last-child { border:0; } .meta { color:var(--mute); font-size:12px; }
-footer { margin:48px 0 32px; color:var(--mute); font-size:12px; text-align:center; }
+.track { background:#eef0f3; border-radius:5px; height:12px; overflow:hidden; }
+.fill { height:100%; width:0; border-radius:5px; background:linear-gradient(90deg,var(--pri),#f59f00); transition:width .9s cubic-bezier(.2,.8,.2,1); }
+.cols { display:flex; align-items:flex-end; gap:5px; height:170px; padding-top:18px; }
+.cols .c { flex:1; min-width:0; height:100%; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; font-size:11px; color:var(--mute); cursor:pointer; border-radius:6px; }
+.cols .c:hover, .cols .c.on { background:var(--pri-l); }
+.cols .c i { display:block; width:78%; max-width:30px; border-radius:4px 4px 0 0; background:linear-gradient(0deg,var(--pri),#f59f00); height:0; transition:height .9s cubic-bezier(.2,.8,.2,1); }
+.cols .c.on i { background:linear-gradient(0deg,var(--pri-d),var(--pri)); }
+.cols .c span.v { font-size:11px; font-weight:700; color:var(--txt); }
+.donutBox { display:flex; gap:18px; align-items:center; flex-wrap:wrap; }
+.donut { width:170px; height:170px; position:relative; flex:none; }
+.donut svg { transform:rotate(-90deg); width:100%; height:100%; }
+.donut circle { transition:stroke-dasharray 1s cubic-bezier(.2,.8,.2,1); cursor:pointer; }
+.donut circle:hover { stroke-width:26; }
+.donut .mid { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; }
+.donut .mid b { font-size:28px; color:var(--pri-d); line-height:1.1; } .donut .mid span { font-size:12px; color:var(--mute); }
+.legend { flex:1; min-width:150px; font-size:13px; }
+.legend div { display:flex; align-items:center; gap:8px; padding:3px 6px; border-radius:6px; cursor:pointer; } .legend div:hover,.legend div.on { background:var(--pri-l); }
+.legend i { width:11px; height:11px; border-radius:3px; flex:none; } .legend em { margin-left:auto; font-style:normal; color:var(--mute); }
+.heat { display:grid; gap:3px; overflow-x:auto; padding-bottom:4px; font-size:12px; }
+.heat .h { color:var(--mute); text-align:center; padding:3px 0; white-space:nowrap; } .heat .h.r { text-align:right; padding-right:8px; overflow:hidden; text-overflow:ellipsis; cursor:pointer; } .heat .h.r:hover,.heat .h.col:hover { color:var(--pri-d); font-weight:700; } .heat .h.col { cursor:pointer; }
+.heat .x { height:30px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-weight:700; animation:pop .45s both; cursor:pointer; transition:transform .15s, box-shadow .15s; }
+.heat .x:hover { transform:scale(1.18); box-shadow:0 4px 12px rgba(0,0,0,.2); z-index:2; }
+.stack { display:flex; height:22px; border-radius:6px; overflow:hidden; background:#eef0f3; }
+.stack i { height:100%; transition:flex-grow .9s cubic-bezier(.2,.8,.2,1); flex:0 0 0; min-width:0; cursor:pointer; }
+.stackRow { display:grid; grid-template-columns:minmax(64px,100px) 1fr 36px; gap:8px; align-items:center; font-size:13px; margin:8px 0; }
+.chips { display:flex; flex-wrap:wrap; gap:8px; }
+.pill { background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:6px 12px; font-size:13px; animation:pop .4s both; }
+.pill b { color:var(--pri-d); margin-left:6px; }
+.gauge { display:grid; grid-template-columns:96px 1fr 44px; gap:8px; align-items:center; font-size:12px; margin:4px 0; }
+.qcard h4 { margin:0 0 8px; font-size:14px; }
+
+/* ---- 新聞 ---- */
+.topics { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+.topics button { border:1px solid var(--line); background:#fff; border-radius:999px; padding:6px 14px; font-size:13px; font-weight:600; color:var(--mute); transition:all .2s; }
+.topics button:hover { border-color:var(--pri-m); color:var(--pri-d); transform:translateY(-1px); } .topics button.on { background:var(--pri); border-color:var(--pri); color:#fff; }
+.news { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; }
+.nc { display:flex; flex-direction:column; gap:8px; background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px 16px; color:var(--txt); transition:transform .25s, box-shadow .25s, border-color .25s; animation:fadeup .5s both; }
+.nc:hover { transform:translateY(-4px); box-shadow:0 12px 26px rgba(16,24,40,.1); border-color:var(--pri-m); text-decoration:none; }
+.nc b { font-size:15px; line-height:1.5; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.nc .m { margin-top:auto; font-size:12px; color:var(--mute); display:flex; gap:8px; align-items:center; }
+.tp { font-size:11px; padding:2px 8px; border-radius:999px; color:#fff; font-weight:700; white-space:nowrap; }
+.more { display:block; margin:16px auto 0; }
+
+/* ---- 課程精華 ---- */
+.course { background:linear-gradient(180deg,#fff 0%,#fff7f0 100%); border-top:1px solid var(--line); margin-top:60px; padding-bottom:20px; }
+.days { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:14px; position:relative; }
+.day { position:relative; overflow:hidden; }
+.day .no { position:absolute; right:10px; top:-10px; font-size:80px; font-weight:900; color:var(--pri-l); line-height:1; user-select:none; }
+.day .dt { font-size:12px; color:var(--pri-d); font-weight:800; letter-spacing:.5px; }
+.day h4 { margin:4px 0 8px; font-size:17px; position:relative; }
+.day ul { margin:0 0 10px; padding-left:18px; color:var(--mute); font-size:13px; position:relative; }
+.day .use { background:var(--pri-l); border-radius:10px; padding:8px 10px; font-size:13px; position:relative; }
+.day .use b { color:var(--pri-d); }
+.flow { display:flex; align-items:stretch; gap:0; flex-wrap:wrap; }
+.layer { flex:1 1 200px; background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 16px; position:relative; transition:transform .25s, box-shadow .25s; }
+.layer:hover { transform:translateY(-4px); box-shadow:0 12px 26px rgba(16,24,40,.1); }
+.layer .ic { width:38px; height:38px; border-radius:10px; background:var(--pri); color:#fff; display:flex; align-items:center; justify-content:center; margin-bottom:8px; }
+.layer h4 { margin:0 0 4px; } .layer ul { margin:0; padding-left:18px; font-size:13px; color:var(--mute); }
+.arrow { flex:0 0 46px; position:relative; display:flex; align-items:center; justify-content:center; color:var(--pri); }
+.arrow::before { content:""; position:absolute; left:4px; right:4px; top:50%; border-top:2px dashed var(--pri-m); }
+.arrow::after { content:""; position:absolute; top:calc(50% - 4px); left:4px; width:8px; height:8px; border-radius:50%; background:var(--pri); animation:packet 1.8s linear infinite; }
+@keyframes packet { to { left:calc(100% - 12px); } }
+@media (max-width:720px) { .arrow { flex-basis:100%; height:30px; } .arrow::before { display:none; } .arrow::after { left:calc(50% - 4px); top:0; animation:packetY 1.4s linear infinite; } @keyframes packetY { to { top:calc(100% - 8px); } } }
+.rules { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px; }
+.rule { display:flex; gap:12px; background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
+.rule .ck { flex:none; width:30px; height:30px; border-radius:50%; background:#2f9e44; color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px; }
+.rule b { display:block; } .rule span { color:var(--mute); font-size:13px; }
+.reveal .rule .ck { transform:scale(0); } .reveal.in .rule .ck { animation:pop .5s .2s both; }
+.stages { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+@media (max-width:720px) { .stages { grid-template-columns:1fr; } }
+.stage { border:2px solid var(--line); border-radius:12px; padding:12px 14px; background:#fff; position:relative; }
+.stage.now { border-color:var(--pri); background:var(--pri-l); } .stage.now::after { content:"本專案目前階段"; position:absolute; top:-10px; right:12px; background:var(--pri); color:#fff; font-size:11px; padding:1px 10px; border-radius:999px; font-weight:700; }
+.stage b { color:var(--pri-d); } .stage p { margin:4px 0 0; font-size:13px; color:var(--mute); }
+.vibe { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.vibe .st { background:#fff; border:1px solid var(--line); border-radius:12px; padding:10px 14px; flex:1 1 200px; }
+.vibe .st b { color:var(--pri-d); } .vibe .st p { margin:2px 0 0; font-size:13px; color:var(--mute); }
+.vibe .ar { color:var(--pri); font-size:20px; animation:nudge 1.2s ease-in-out infinite; } @keyframes nudge { 50% { transform:translateX(6px); } }
+.sbt { margin:30px 0 10px; font-size:19px; display:flex; align-items:center; gap:8px; } .sbt i { color:var(--pri); }
+.who { color:var(--mute); font-size:13px; margin-top:6px; }
+
+footer { margin:0; padding:34px 0 40px; color:var(--faint); font-size:12px; text-align:center; background:#fff; border-top:1px solid var(--line); }
+
+/* ---- 捲動顯示 ---- */
+.reveal { opacity:0; transform:translateY(22px); transition:opacity .7s ease, transform .7s ease; }
+.reveal.in { opacity:1; transform:none; }
+.sticky-top { position:fixed; right:18px; bottom:18px; z-index:50; width:44px; height:44px; border-radius:50%; border:0; background:var(--pri); color:#fff; box-shadow:0 6px 18px rgba(232,89,12,.4); opacity:0; pointer-events:none; transition:opacity .3s, transform .3s; }
+.sticky-top.show { opacity:1; pointer-events:auto; } .sticky-top:hover { transform:translateY(-3px); }
+@media (prefers-reduced-motion: reduce) {
+  *,*::before,*::after { animation:none !important; transition:none !important; }
+  .reveal { opacity:1; transform:none; } html { scroll-behavior:auto; }
+  .fill,.cols .c i { transition:none; }
+}
 </style>
 </head>
 <body>
-<header class="top"><div class="wrap">
-  <b>🎫 TicketWar</b>
-  <nav><a href="#analysis">現況分析</a><a href="#news">最新消息</a><a href="app/">售票統整平台</a></nav>
-</div></header>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top"><i class="fa-solid fa-ticket"></i>TicketWar <b>入口</b></a>
+    <nav>
+      <a href="#analysis">現況分析</a><a href="#news">台灣新聞</a><a href="#course">課程精華</a>
+      <a class="cta" href="app/"><i class="fa-solid fa-arrow-right-to-bracket"></i> 進入售票統整平台</a>
+    </nav>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<section class="hero" id="top">
+  <div class="blob a"></div><div class="blob b"></div><div class="blob c"></div>
+  <i class="float fa-solid fa-ticket" style="left:6%;top:18%"></i>
+  <i class="float fa-solid fa-microphone-lines" style="left:44%;top:10%;animation-delay:-2s"></i>
+  <i class="float fa-solid fa-guitar" style="right:6%;top:16%;animation-delay:-4s"></i>
+  <i class="float fa-solid fa-music" style="right:30%;bottom:12%;animation-delay:-1s"></i>
+  <div class="wrap">
+    <div>
+      <span class="badge"><i class="fa-solid fa-bolt"></i> 四大售票平台・每日自動更新</span>
+      <h1>台灣<span class="rot" id="rot">演唱會</span><br>一頁看懂</h1>
+      <p class="lead">整合 Ticket Plus、拓元、KKTIX、OPENTIX 的公開資料。先看市場現況與台灣最新消息，再進入平台追蹤開賣、設定提醒、演練搶票。</p>
+      <a class="btn" href="app/"><i class="fa-solid fa-calendar-days"></i> 進入售票統整平台</a>
+      <a class="btn alt" href="#analysis"><i class="fa-solid fa-chart-column"></i> 看現況分析</a>
+      <a class="btn alt" href="#course"><i class="fa-solid fa-graduation-cap"></i> 課程精華</a>
+      <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+    <div class="live" id="live">
+      <div class="tag"><span class="dot"></span> 下一場開賣倒數</div>
+      <h3 id="liveTitle">載入中…</h3>
+      <div class="meta" id="liveMeta"></div>
+      <div class="cd mono" id="liveCd"></div>
+    </div>
+  </div>
+</section>
 
 <main class="wrap">
-  <section class="hero">
-    <h1>演唱會與售票資訊入口</h1>
-    <p>整合 Ticket Plus、拓元、KKTIX、OPENTIX 的公開活動資料；看市場現況、追最新消息，再進入平台追蹤開賣與演練搶票。</p>
-    <a class="btn" href="app/">進入售票統整平台 →</a>
-    <a class="btn alt" href="#analysis">先看現況分析</a>
+  <div class="kpis" id="heroKpis"></div>
+
+  <div class="ticker reveal" id="tickerBox">
+    <div class="lab"><i class="fa-solid fa-bullhorn"></i> 即將開賣</div>
+    <div class="tk"><div class="belt" id="belt"></div></div>
+  </div>
+
+  <!-- 現況分析 -->
+  <section class="blk" id="analysis">
+    <h2 class="sec">現況分析</h2>
+    <p class="sub">資料來自四個平台的公開頁面（<span id="asof"></span>）。<b>點任何圖表上的項目都可以交叉篩選</b>，所有圖會一起重算。</p>
+
+    <div class="bar" id="filterBar"></div>
+    <div class="kpis" id="aKpis" style="margin:0 0 14px"></div>
+    <div class="ins" id="insights"></div>
+    <div class="tabs" id="tabs">
+      <button data-t="overview" class="on">總覽</button>
+      <button data-t="cross">交叉比對</button>
+      <button data-t="sale">開賣與票價</button>
+      <button data-t="quality">資料品質</button>
+    </div>
+    <div id="tabBody"></div>
   </section>
 
-  <div class="kpis" id="kpis"></div>
-
-  <h2 id="analysis">現況分析 <small id="asof"></small>
-    <span class="seg" id="scope"><button data-s="concert" class="on">演唱會＋音樂祭</button><button data-s="all">全部活動</button></span>
-  </h2>
-  <div class="grid">
-    <div class="card"><h3>活動類型分布</h3><div id="cCategory"></div></div>
-    <div class="card"><h3>熱門場館 Top 10</h3><div id="cVenue"></div></div>
-    <div class="card"><h3>地區分布</h3><div id="cCity"></div></div>
-    <div class="card"><h3>售票平台分布</h3><div id="cPlatform"></div></div>
-  </div>
-  <div class="card" style="margin-top:14px"><h3>演出月份分布（活動起始日）</h3><div class="months" id="cMonth"></div></div>
-
-  <h2>即將開賣 <small>音樂類活動，依開賣時間排序</small></h2>
-  <div class="card"><ul class="list" id="upcoming"></ul></div>
-
-  <h2 id="news">最新演唱會消息 <small id="newsAsof"></small></h2>
-  <div class="card"><ul class="list" id="news-list"></ul></div>
-
-  <footer>
-    資料來源：各售票平台公開頁面與 Google 新聞標題連結，僅供參考，實際以官方為準。本站不登入、不代購、不處理驗證碼。<br>
-    <span id="built"></span>
-  </footer>
+  <!-- 新聞 -->
+  <section class="blk" id="news">
+    <h2 class="sec">台灣演唱會・表演新聞</h2>
+    <p class="sub">只收台灣媒體與台灣場次，已排除香港、澳門、中國大陸與海外場次。<span id="newsAsof"></span></p>
+    <div class="topics" id="topics"></div>
+    <div class="news" id="newsList"></div>
+    <button class="btn alt more" id="moreNews" hidden>看更多新聞</button>
+  </section>
 </main>
+
+<!-- 課程精華 -->
+<section class="course" id="course">
+  <div class="wrap">
+    <div class="blk reveal" style="padding-top:54px">
+      <span class="badge"><i class="fa-solid fa-graduation-cap"></i> 2026/10/07–10/15・資策會產業情報研究所</span>
+      <h2 class="sec" style="margin-top:10px">課程精華：把 4 天學到的，做成這個作品</h2>
+      <p class="sub">電子資訊產業在職菁英 AI 導入培訓工作坊（生成式 AI 實務應用：資料分析、流程自動化與 AI 工具開發）。下面是我對課程重點的整理，以及每一堂課在這個網站裡用到的地方。<br>
+      <span class="who">課程講師：徐灝（加號設計數位工程有限公司）。內容為學習心得整理，非課程原始簡報。</span></p>
+    </div>
+
+    <div class="days">
+      <div class="card day reveal"><div class="no">1</div>
+        <div class="dt">DAY 1・10/07</div><h4>生成式 AI 原理與應用趨勢</h4>
+        <ul><li>AI 把文字拆成 Token、轉成向量，靠 Self-Attention 抓重點</li><li>本質是「預測下一個 Token」；Temperature 決定穩定或有創意</li><li>資料風險邊界：個資與機密不丟給 AI</li></ul>
+        <div class="use"><b>用在這裡：</b>下午實作「AI 資訊蒐集與市場趨勢分析」→ 上方的現況分析；只用公開資料、不登入、不碰個資。</div></div>
+      <div class="card day reveal"><div class="no">2</div>
+        <div class="dt">DAY 2・10/08</div><h4>企業資料盤點與資料分析基礎</h4>
+        <ul><li>資料分三類：結構化、半結構化、非結構化</li><li>清理四步驟：探索、清洗、格式統一、AI 輔助</li><li>「資料爛，AI 結果也爛」</li></ul>
+        <div class="use"><b>用在這裡：</b>四個平台的 JSON、HTML、Atom 都正規化成同一種格式；「資料品質」分頁就是資料檢核。</div></div>
+      <div class="card day reveal"><div class="no">3</div>
+        <div class="dt">DAY 3・10/14</div><h4>Vibe Coding 與安全五條底線</h4>
+        <ul><li>三步：寫 SPEC、餵給 AI、迭代</li><li>版本控制、程式碼審查、密鑰不進程式、測試後上線、最小權限</li><li>AI 生成的程式要自己看過</li></ul>
+        <div class="use"><b>用在這裡：</b>專案的 <a href="https://github.com/yosi067/getTicket/blob/main/SPEC.md" target="_blank" rel="noopener noreferrer">SPEC.md</a> 先寫需求；下方逐條對照五條底線。</div></div>
+      <div class="card day reveal"><div class="no">4</div>
+        <div class="dt">DAY 4・10/15</div><h4>AI 工具整合與應用方案</h4>
+        <ul><li>四層整合：資料、分析、應用、輸出</li><li>API 就像餐廳點餐；整合省的是步驟之間的縫</li><li>先手動、再半自動、最後全自動，不要跳級</li></ul>
+        <div class="use"><b>用在這裡：</b>首頁、平台、複製重點與每日自動部署，剛好是一條完整的四層流程。</div></div>
+    </div>
+
+    <h3 class="sbt reveal"><i class="fa-solid fa-diagram-project"></i> Day 4：四層整合架構，對應這個專案</h3>
+    <div class="flow reveal">
+      <div class="layer"><div class="ic"><i class="fa-solid fa-database"></i></div><h4>資料層</h4><ul><li>Ticket Plus、拓元、KKTIX、OPENTIX 公開資料</li><li>Google 新聞 RSS（只取標題連結）</li></ul></div>
+      <div class="arrow"></div>
+      <div class="layer"><div class="ic"><i class="fa-solid fa-chart-pie"></i></div><h4>分析層</h4><ul><li>正規化、去重、類型與城市歸類</li><li>統計與交叉比對（上方圖表）</li></ul></div>
+      <div class="arrow"></div>
+      <div class="layer"><div class="ic"><i class="fa-solid fa-window-maximize"></i></div><h4>應用層</h4><ul><li>售票統整平台：日曆、想搶、已購、演練</li><li>Chrome 擴充功能（Ticket Plus）</li></ul></div>
+      <div class="arrow"></div>
+      <div class="layer"><div class="ic"><i class="fa-solid fa-share-nodes"></i></div><h4>輸出層</h4><ul><li>本入口頁、複製活動重點文字</li><li>.ics 行事曆、開賣提醒</li></ul></div>
+    </div>
+
+    <h3 class="sbt reveal"><i class="fa-solid fa-stairs"></i> Day 4：整合三階段</h3>
+    <div class="stages reveal">
+      <div class="stage"><b>① 手動整合</b><p>逐一打開四個平台、手動比對開賣時間。先確認每個環節有價值。</p></div>
+      <div class="stage"><b>② 半自動化</b><p>用腳本抓取並正規化，但需要人手動觸發更新與發布。</p></div>
+      <div class="stage now"><b>③ 自動化</b><p>GitHub Actions 每天自動抓資料、跑測試、建置並部署，一鍵都不用按。</p></div>
+    </div>
+
+    <h3 class="sbt reveal"><i class="fa-solid fa-shield-halved"></i> Day 3：安全五條底線，逐條對照</h3>
+    <div class="rules reveal">
+      <div class="rule"><div class="ck"><i class="fa-solid fa-check"></i></div><div><b>1. 版本控制</b><span>全部程式與資料放在 Git／GitHub，每次改動都能還原。</span></div></div>
+      <div class="rule"><div class="ck"><i class="fa-solid fa-check"></i></div><div><b>2. 程式碼審查</b><span>統計與解析都寫成純函式，並有自動化測試把關，AI 產生的程式也要看過。</span></div></div>
+      <div class="rule"><div class="ck"><i class="fa-solid fa-check"></i></div><div><b>3. 密鑰不進程式</b><span>所有來源都是公開頁面與公開 RSS，整個專案不需要任何 API Key。</span></div></div>
+      <div class="rule"><div class="ck"><i class="fa-solid fa-check"></i></div><div><b>4. 測試後才上線</b><span>部署流程先跑測試，測試沒過就不會發布；另有精簡版先做小範圍試用。</span></div></div>
+      <div class="rule"><div class="ck"><i class="fa-solid fa-check"></i></div><div><b>5. 最小權限</b><span>平台唯讀、被動：不登入、不代購、不處理驗證碼；擴充功能只開必要權限與網域。</span></div></div>
+    </div>
+
+    <h3 class="sbt reveal"><i class="fa-solid fa-wand-magic-sparkles"></i> Day 3：Vibe Coding 三步，這個專案怎麼走</h3>
+    <div class="vibe reveal">
+      <div class="st"><b>① 寫 SPEC</b><p>先把痛點寫成「輸入什麼、輸出什麼、要哪些功能」：四平台活動、開賣倒數、提醒。</p></div>
+      <i class="ar fa-solid fa-arrow-right"></i>
+      <div class="st"><b>② 交給 AI 生成</b><p>由 AI 產出可執行的網頁與腳本，我再逐段檢視。</p></div>
+      <i class="ar fa-solid fa-arrow-right"></i>
+      <div class="st"><b>③ 迭代</b><p>跑起來不對就具體描述問題：新聞混入香港、需要複製按鈕、分析要更深，都是這樣一輪輪補上。</p></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    資料來源：各售票平台公開頁面與 Google 新聞標題連結，僅供參考，實際售票資訊以官方為準。本站不登入、不代購、不處理驗證碼。<br>
+    <span id="built"></span>
+  </div>
+</footer>
+<button class="sticky-top" id="toTop" aria-label="回到頂端"><i class="fa-solid fa-arrow-up"></i></button>
 
 <script type="application/json" id="data">/*__DATA__*/null</script>
 <script>
+/*__STATS__*/
+</script>
+<script>
+'use strict';
 const D = JSON.parse(document.getElementById('data').textContent);
-const $ = (id) => document.getElementById(id);
-const el = (tag, props = {}, ...kids) => {
+const ROWS = D.rows;
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = (s, r = document) => r.querySelector(s);
+
+function el(tag, props, ...kids) {
   const e = document.createElement(tag);
-  for (const [k, v] of Object.entries(props)) { if (k === 'text') e.textContent = v; else e.setAttribute(k, v); }
-  e.append(...kids.filter(Boolean));
+  for (const [k, v] of Object.entries(props || {})) {
+    if (v == null || v === false) continue;
+    if (k === 'class') e.className = v;
+    else if (k === 'text') e.textContent = v;
+    else if (k === 'style') e.style.cssText = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k, v === true ? '' : String(v));
+  }
+  for (const kid of kids.flat()) if (kid != null && kid !== false) e.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
   return e;
-};
-const fmtDate = (ms) => new Date(ms + 8 * 3600e3).toISOString().slice(0, 16).replace('T', ' ');
+}
+const svgEl = (tag, attrs) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
 const safe = (u) => (/^https?:\/\//i.test(u || '') ? u : null);
-
-function bars(box, pairs) {
-  if (!pairs.length) { box.replaceChildren(el('div', { class: 'empty', text: '沒有資料' })); return; }
-  const max = Math.max(...pairs.map((p) => p[1]));
-  box.replaceChildren(...pairs.map(([name, n]) => el('div', { class: 'row' },
-    el('span', { class: 'nm', title: name, text: name }),
-    el('div', { class: 'bar' }, Object.assign(el('i'), { style: `width:${(n / max * 100).toFixed(1)}%` })),
-    el('span', { class: 'n', text: String(n) }))));
-}
-
-function renderStats(scope) {
-  const s = D.stats[scope];
-  bars($('cCategory'), D.stats.all.byCategory.filter(([c]) => scope === 'all' || s.byCategory.some(([x]) => x === c)));
-  bars($('cVenue'), s.byVenue);
-  bars($('cCity'), s.byCity);
-  bars($('cPlatform'), s.byPlatform);
-  const max = Math.max(1, ...s.byMonth.map((m) => m[1]));
-  $('cMonth').replaceChildren(...(s.byMonth.length ? s.byMonth.map(([m, n]) => el('div', { title: `${m}：${n} 場` },
-    el('span', { text: String(n) }), Object.assign(el('i'), { style: `height:${(n / max * 110).toFixed(0)}px` }), el('span', { text: m.slice(2) }))) : [el('div', { class: 'empty', text: '沒有資料' })]));
-}
-
-document.querySelectorAll('#scope button').forEach((b) => b.addEventListener('click', () => {
-  document.querySelectorAll('#scope button').forEach((x) => x.classList.toggle('on', x === b));
-  renderStats(b.dataset.s);
+const p2 = (n) => String(n).padStart(2, '0');
+const fmtDate = (ms) => { const d = new Date(ms + 8 * 3600e3); return `${d.getUTCFullYear()}-${p2(d.getUTCMonth() + 1)}-${p2(d.getUTCDate())} ${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}`; };
+const rel = (ms) => {
+  const m = Math.round((Date.now() - ms) / 60000);
+  if (m < 60) return `${Math.max(m, 1)} 分鐘前`;
+  if (m < 1440) return `${Math.round(m / 60)} 小時前`;
+  return `${Math.round(m / 1440)} 天前`;
+};
+const num = (n) => Number(n).toLocaleString('zh-TW');
+const grow = (root) => requestAnimationFrame(() => requestAnimationFrame(() => {
+  root.querySelectorAll('[data-w]').forEach((n) => { n.style.width = n.dataset.w; });
+  root.querySelectorAll('[data-h]').forEach((n) => { n.style.height = n.dataset.h; });
+  root.querySelectorAll('[data-g]').forEach((n) => { n.style.flexGrow = n.dataset.g; });
 }));
 
-const c = D.stats.concert, a = D.stats.all;
-$('kpis').replaceChildren(...[
-  [a.total, '收錄活動'], [c.total, '演唱會＋音樂祭'], [c.byVenue[0]?.[0] ?? '—', '最熱門場館'], [c.byCity[0]?.[0] ?? '—', '最多演出地區'],
-].map(([v, t]) => el('div', { class: 'kpi' }, el('b', { text: String(v) }), el('span', { text: t }))));
-$('asof').textContent = `資料時間 ${fmtDate(D.fetchedAt)}`;
-renderStats('concert');
+function countTo(n, to, fmt = num, ms = 900) {
+  const from = Number(n.dataset.v ?? 0);
+  n.dataset.v = to;
+  if (RM || from === to) { n.textContent = fmt(to); return; }
+  const t0 = performance.now();
+  const step = (t) => {
+    const k = Math.min(1, (t - t0) / ms);
+    n.textContent = fmt(Math.round(from + (to - from) * (1 - (1 - k) ** 3)));
+    if (k < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
 
-$('upcoming').replaceChildren(...(D.upcoming.length ? D.upcoming.map((u) => {
-  const href = safe(u.url);
-  return el('li', {}, href ? el('a', { href, target: '_blank', rel: 'noopener noreferrer', text: u.title }) : el('span', { text: u.title }),
-    el('div', { class: 'meta', text: `開賣 ${fmtDate(u.saleStart)}｜${u.platform}${u.venue ? `｜${u.venue}` : ''}` }));
-}) : [el('li', { class: 'empty', text: '目前沒有已公布開賣時間的活動' })]));
+const COLORS = { 演唱會: '#e8590c', 音樂祭: '#f59f00', 舞台劇: '#7048e8', 見面會: '#e64980', 課程講座: '#1c7ed6', 展覽: '#2f9e44', 其他: '#868e96' };
+const catColor = (c) => COLORS[c] ?? '#868e96';
+const LABEL = { c: '類型', y: '地區', p: '平台', m: '月份', v: '場館' };
+const SCOPE_LABEL = { show: '表演類', music: '僅音樂類', all: '全部活動' };
+const state = { scope: 'show', c: null, y: null, p: null, m: null, v: null, tab: 'overview' };
+const shownLabel = (k, v) => (k === 'p' ? platformName(v) : v);
 
-$('newsAsof').textContent = D.news.items.length ? `更新於 ${fmtDate(D.news.fetchedAt)}` : '';
-$('news-list').replaceChildren(...(D.news.items.length ? D.news.items.map((n) => {
-  const href = safe(n.link);
-  return el('li', {}, href ? el('a', { href, target: '_blank', rel: 'noopener noreferrer', text: n.title }) : el('span', { text: n.title }),
-    el('div', { class: 'meta', text: `${n.source || '新聞'}｜${fmtDate(n.ts)}` }));
-}) : [el('li', { class: 'empty', text: '暫時無法取得新聞，請稍後再來' })]));
-$('built').textContent = `網站建置時間 ${fmtDate(D.builtAt)}（每日自動更新）`;
+/* ---------- 篩選 ---------- */
+function setF(k, v) { state[k] = state[k] === v ? null : v; renderAnalysis(); }
+// 取得「除了指定維度之外」套用其他篩選的資料；圖表自己的維度不被自己篩掉，才看得到其他選項
+const rx = (...skip) => applyFilter(ROWS, Object.fromEntries(Object.entries(state).filter(([k]) => ['scope', 'c', 'y', 'p', 'm', 'v'].includes(k) && !skip.includes(k))));
+
+/* ---------- 圖表元件 ---------- */
+function barList(pairs, key, { limit = 10, fmt = num, color } = {}) {
+  const list = pairs.slice(0, limit);
+  if (!list.length) return el('div', { class: 'empty', text: '沒有符合的資料' });
+  const max = Math.max(1, ...list.map((p) => p[1]));
+  const box = el('div');
+  list.forEach(([name, n]) => {
+    const fill = el('div', { class: 'fill', 'data-w': `${(n / max * 100).toFixed(1)}%` });
+    if (color) fill.style.background = color(name);
+    box.append(el('div', { class: `row ${key && state[key] === name ? 'on' : ''}`, title: `${shownLabel(key, name)}：${fmt(n)}`, onclick: key ? () => setF(key, name) : null },
+      el('span', { class: 'nm', text: shownLabel(key, name) }), el('div', { class: 'track' }, fill), el('span', { class: 'n mono', text: fmt(n) })));
+  });
+  return box;
+}
+
+function columns(pairs, key, { labelOf = (x) => x, hl } = {}) {
+  if (!pairs.length) return el('div', { class: 'empty', text: '沒有符合的資料' });
+  const max = Math.max(1, ...pairs.map((p) => p[1]));
+  return el('div', { class: 'cols' }, pairs.map(([k, n]) => el('div', { class: `c ${(key && state[key] === k) || hl === k ? 'on' : ''}`, title: `${labelOf(k)}：${n}`, onclick: key ? () => setF(key, k) : null },
+    el('span', { class: 'v mono', text: n || '' }), el('i', { 'data-h': `${(n / max * 100).toFixed(1)}%` }), el('span', { text: labelOf(k) }))));
+}
+
+function donut(pairs, key) {
+  const total = pairs.reduce((s, p) => s + p[1], 0);
+  if (!total) return el('div', { class: 'empty', text: '沒有符合的資料' });
+  const R = 62; const C = 2 * Math.PI * R;
+  const svg = svgEl('svg', { viewBox: '0 0 170 170' });
+  svg.append(svgEl('circle', { cx: 85, cy: 85, r: R, fill: 'none', stroke: '#eef0f3', 'stroke-width': 22 }));
+  let acc = 0;
+  const arcs = [];
+  pairs.forEach(([name, n]) => {
+    const len = (n / total) * C;
+    const c = svgEl('circle', { cx: 85, cy: 85, r: R, fill: 'none', stroke: catColor(name), 'stroke-width': 22, 'stroke-dasharray': `0 ${C}`, 'stroke-dashoffset': -acc, opacity: state[key] && state[key] !== name ? '.35' : '1' });
+    c.append(svgEl('title', {})); c.firstChild.textContent = `${name}：${n}`;
+    c.addEventListener('click', () => setF(key, name));
+    arcs.push([c, len]); svg.append(c); acc += len;
+  });
+  requestAnimationFrame(() => requestAnimationFrame(() => arcs.forEach(([c, len]) => c.setAttribute('stroke-dasharray', `${Math.max(len - 1.5, 0)} ${C}`))));
+  const big = el('b', { text: '0' });
+  const legend = el('div', { class: 'legend' }, pairs.map(([name, n]) => el('div', { class: state[key] === name ? 'on' : '', onclick: () => setF(key, name) },
+    el('i', { style: `background:${catColor(name)}` }), name, el('em', { text: `${n}（${Math.round(n / total * 100)}%）` }))));
+  const box = el('div', { class: 'donutBox' }, el('div', { class: 'donut' }, svg, el('div', { class: 'mid' }, big, el('span', { text: '場活動' }))), legend);
+  countTo(big, total);
+  return box;
+}
+
+const heatColor = (n, max) => {
+  const a = n ? 0.1 + 0.9 * (n / max) : 0;
+  return { bg: n ? `rgba(232,89,12,${a.toFixed(2)})` : '#f3f4f6', fg: a > 0.55 ? '#fff' : (n ? '#7a2e0a' : '#c4c9cf') };
+};
+function heat(t, rk, ck, { rowLabel = (x) => x, colLabel = (x) => x } = {}) {
+  if (!t.rows.length || !t.cols.length) return el('div', { class: 'empty', text: '沒有符合的資料' });
+  const g = el('div', { class: 'heat', style: `grid-template-columns:minmax(70px,110px) repeat(${t.cols.length},minmax(36px,1fr))` });
+  g.append(el('div'));
+  t.cols.forEach((c) => g.append(el('div', { class: 'h col', title: `篩選 ${colLabel(c)}`, onclick: LABEL[ck] ? () => setF(ck, c) : null, text: colLabel(c) })));
+  let i = 0;
+  t.rows.forEach((r, ri) => {
+    g.append(el('div', { class: 'h r', title: `篩選 ${rowLabel(r)}`, onclick: LABEL[rk] ? () => setF(rk, r) : null, text: rowLabel(r) }));
+    t.cells[ri].forEach((n, ci) => {
+      const { bg, fg } = heatColor(n, t.max);
+      g.append(el('div', {
+        class: 'x', title: `${rowLabel(r)} × ${colLabel(t.cols[ci])}：${n}`, text: n || '·',
+        style: `background:${bg};color:${fg};animation-delay:${Math.min(i++ * 8, 500)}ms`,
+        onclick: () => { if (LABEL[rk]) state[rk] = r; if (LABEL[ck]) state[ck] = t.cols[ci]; renderAnalysis(); },
+      }));
+    });
+  });
+  return el('div', { style: 'overflow-x:auto' }, g);
+}
+
+function stacked(t) {
+  if (!t.rows.length) return el('div', { class: 'empty', text: '沒有符合的資料' });
+  const box = el('div', {}, el('div', { class: 'chips', style: 'margin-bottom:6px' }, t.cols.map((c) => el('span', { class: 'pill', style: `border-left:4px solid ${catColor(c)}`, text: c }))));
+  t.rows.forEach((r, ri) => {
+    const total = t.cells[ri].reduce((s, x) => s + x, 0);
+    box.append(el('div', { class: 'stackRow' }, el('span', { text: platformName(r) }),
+      el('div', { class: 'stack' }, t.cols.map((c, ci) => el('i', { title: `${platformName(r)} × ${c}：${t.cells[ri][ci]}`, style: `background:${catColor(c)}`, 'data-g': t.cells[ri][ci], onclick: () => { state.p = r; state.c = c; renderAnalysis(); } }))),
+      el('span', { class: 'mono', text: total })));
+  });
+  return box;
+}
+
+const card = (title, icon, body, small) => el('div', { class: 'card' }, el('h3', {}, el('i', { class: `fa-solid ${icon}` }), title, small ? el('small', { text: small }) : null), body);
+
+/* ---------- 分頁內容 ---------- */
+const TABS = {
+  overview() {
+    const cats = tally(rx('c'), 'c');
+    return [
+      card('活動類型', 'fa-chart-pie', donut(cats, 'c'), '點選可篩選'),
+      card('地區分布', 'fa-location-dot', barList(tally(rx('y'), 'y'), 'y', { limit: 10 })),
+      card('熱門場館 Top 10', 'fa-landmark', barList(tally(rx('v'), 'v'), 'v', { limit: 10 })),
+      card('演出月份', 'fa-calendar', columns(byMonth(rx('m')), 'm', { labelOf: (m) => `${+m.slice(5)}月` }), '活動起始日'),
+      card('星期幾演出', 'fa-calendar-day', columns(byWeekday(rx()), null, { labelOf: (x) => `週${x}` })),
+      card('售票平台', 'fa-store', barList(tally(rx('p'), 'p').map(([k, n]) => [k, n]), 'p', { limit: 6 })),
+    ];
+  },
+  cross() {
+    const r = rx('c', 'm'); const r2 = rx('y', 'c'); const r3 = rx('p', 'c'); const r4 = rx('v', 'm');
+    return [
+      card('類型 × 月份', 'fa-table-cells', heat(cross(r, 'c', 'm', { rowLimit: 7, colLimit: 12 }), 'c', 'm', { colLabel: (m) => `${+m.slice(5)}月` }), '什麼時候最多什麼類型'),
+      card('地區 × 類型', 'fa-table-cells', heat(cross(r2, 'y', 'c', { rowLimit: 8, colLimit: 6 }), 'y', 'c'), '各縣市偏好哪種活動'),
+      card('平台 × 類型', 'fa-layer-group', stacked(cross(r3, 'p', 'c', { rowLimit: 6, colLimit: 7 })), '各平台主打什麼'),
+      card('熱門場館 × 月份', 'fa-table-cells', heat(cross(r4, 'v', 'm', { rowLimit: 8, colLimit: 12 }), 'v', 'm', { colLabel: (m) => `${+m.slice(5)}月` }), '場館檔期'),
+      card('類型 × 星期', 'fa-table-cells', heat(cross(rx('c'), 'c', 'w', { rowLimit: 6, colLimit: 7 }), 'c', 'w', { colLabel: (w) => `週${WEEKDAY_LABELS[w]}` }), '週末是不是主戰場'),
+      card('地區 × 平台', 'fa-table-cells', heat(cross(rx('y', 'p'), 'y', 'p', { rowLimit: 8, colLimit: 4 }), 'y', 'p', { colLabel: platformName }), '哪裡的活動在哪賣'),
+    ];
+  },
+  sale() {
+    const r = rx();
+    const hot = hotDates(r);
+    const lead = leadDays(r, 'c').slice(0, 7);
+    return [
+      card('開賣時段（台灣時間）', 'fa-clock', columns(saleHours(r).filter(([h]) => h >= 8 && h <= 23), null, { labelOf: (h) => `${h}` }), '幾點最常開賣'),
+      card('開賣到演出的提前天數', 'fa-hourglass-half', barList(lead.map(([k, d]) => [k, d]), 'c', { limit: 7, fmt: (n) => `${n}天`, color: catColor }), '各類型中位數'),
+      card('最高票價分布', 'fa-tags', barList(priceBands(r), null, { limit: 8 })),
+      card('各類型票價中位數', 'fa-coins', barList(medianPrice(r, 'c'), 'c', { limit: 7, fmt: (n) => `$${num(n)}`, color: catColor }), '以最高票價計'),
+      card('各地區票價中位數', 'fa-coins', barList(medianPrice(r, 'y'), 'y', { limit: 8, fmt: (n) => `$${num(n)}` })),
+      card('撞期日 Top 6', 'fa-triangle-exclamation', hot.length ? el('div', { class: 'chips' }, hot.map(([d, n], i) => el('span', { class: 'pill', style: `animation-delay:${i * 80}ms`, text: d }, el('b', { text: `${n} 場` })))) : el('div', { class: 'empty', text: '沒有同日多場的日期' }), '同一天演出最多'),
+    ];
+  },
+  quality() {
+    const all = quality(rx());
+    const per = qualityByPlatform(rx('p'));
+    const M = [['price', '有票價'], ['venue', '有場館'], ['sale', '有開賣時間'], ['date', '有演出日期'], ['category', '類型為原始值']];
+    const gauge = (label, v) => el('div', { class: 'gauge' }, el('span', { text: label }), el('div', { class: 'track' }, el('div', { class: 'fill', 'data-w': `${v}%` })), el('span', { class: 'mono', text: `${v}%` }));
+    return [
+      card('整體完整度', 'fa-clipboard-check', el('div', {}, el('p', { class: 'note', text: `樣本 ${all.n} 場。Day 2 的資料檢核：先探索缺失，再清洗、統一格式。` }), M.map(([k, l]) => gauge(l, all[k]))), '對應 Day 2'),
+      ...per.map(([p, q]) => card(platformName(p), 'fa-store', el('div', { class: 'qcard' }, el('p', { class: 'note', text: `${q.n} 場` }), M.map(([k, l]) => gauge(l, q[k]))))),
+      card('怎麼讀這張圖', 'fa-circle-info', el('p', { class: 'note', style: 'margin:0', text: '「類型為原始值」代表平台本身有給類型；其餘是用標題與關鍵字推測的，會讓類型統計偏向「其他」。拓元、KKTIX 未提供票價或開賣時間時，也會拉低對應欄位的比例。' })),
+    ];
+  },
+};
+
+/* ---------- 分析區主流程 ---------- */
+function renderFilterBar() {
+  const bar = $('#filterBar');
+  const chips = ['c', 'y', 'p', 'm', 'v'].filter((k) => state[k]).map((k) => el('span', { class: 'chip', title: '點一下取消', onclick: () => setF(k, state[k]) }, `${LABEL[k]}：${shownLabel(k, state[k])}`, el('i', { class: 'fa-solid fa-xmark' })));
+  bar.replaceChildren(
+    el('div', { class: 'seg' }, Object.entries(SCOPE_LABEL).map(([k, l]) => el('button', { class: state.scope === k ? 'on' : '', text: l, onclick: () => { state.scope = k; renderAnalysis(); } }))),
+    ...chips,
+    ...(chips.length ? [el('span', { class: 'chip', style: 'background:#fff', onclick: () => { ['c', 'y', 'p', 'm', 'v'].forEach((k) => { state[k] = null; }); renderAnalysis(); } }, el('i', { class: 'fa-solid fa-rotate-left' }), '清除全部')] : []),
+    el('span', { class: 'hint', text: '提示：點圖表項目、色塊或標籤即可交叉篩選' }),
+  );
+}
+
+function kpiCard(icon, label, to, fmt = num, id) {
+  const b = el('b', { class: 'mono', id });
+  const old = id ? $(`#${id}`) : null;
+  if (old) b.dataset.v = old.dataset.v ?? 0;
+  const c = el('div', { class: 'kpi' }, el('span', {}, el('i', { class: `fa-solid ${icon}` }), label), b);
+  queueMicrotask(() => countTo(b, to, fmt));
+  return c;
+}
+
+function renderAnalysis() {
+  const rows = rx();
+  renderFilterBar();
+  const venues = new Set(rows.map((r) => r.v).filter(Boolean)).size;
+  const cities = new Set(rows.map((r) => r.y).filter((y) => y !== '其他')).size;
+  const prices = rows.map((r) => r.hi).filter((x) => x != null);
+  $('#aKpis').replaceChildren(
+    kpiCard('fa-ticket', '符合條件的活動', rows.length, num, 'k1'),
+    kpiCard('fa-landmark', '涵蓋場館數', venues, num, 'k2'),
+    kpiCard('fa-location-dot', '涵蓋縣市數', cities, num, 'k3'),
+    kpiCard('fa-coins', '最高票價中位數 NT$', Math.round(median(prices) ?? 0), num, 'k4'),
+  );
+  $('#insights').replaceChildren(...insights(rows).map((t, i) => el('div', { style: `animation-delay:${i * 70}ms` }, el('i', { class: 'fa-solid fa-lightbulb' }), t)));
+  document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.t === state.tab));
+  const body = $('#tabBody');
+  body.replaceChildren(el('div', { class: state.tab === 'cross' || state.tab === 'quality' ? 'grid2' : 'grid3' }, ...TABS[state.tab]()));
+  grow(body);
+}
+document.querySelectorAll('#tabs button').forEach((b) => b.addEventListener('click', () => { state.tab = b.dataset.t; renderAnalysis(); }));
+
+/* ---------- 新聞 ---------- */
+const TOPIC_COLOR = { 開賣搶票: '#e8590c', 加場: '#e64980', 音樂祭: '#f59f00', 黃牛與詐騙: '#c92a2a', 演出消息: '#1c7ed6' };
+let topic = '全部'; let shown = 12;
+function renderNews() {
+  const items = D.news.items;
+  $('#newsAsof').textContent = items.length ? `更新於 ${fmtDate(D.news.fetchedAt)}` : '';
+  const counts = tally(items.map((n) => ({ t: n.topic })), 't');
+  $('#topics').replaceChildren(...[['全部', items.length], ...counts].map(([t, n]) => el('button', { class: topic === t ? 'on' : '', text: `${t} ${n}`, onclick: () => { topic = t; shown = 12; renderNews(); } })));
+  const list = items.filter((n) => topic === '全部' || n.topic === topic);
+  $('#newsList').replaceChildren(...(list.length ? list.slice(0, shown).map((n, i) => {
+    const href = safe(n.link);
+    return el(href ? 'a' : 'div', { class: 'nc', href, target: href ? '_blank' : null, rel: href ? 'noopener noreferrer' : null, style: `animation-delay:${Math.min(i, 12) * 50}ms` },
+      el('span', { class: 'tp', style: `background:${TOPIC_COLOR[n.topic] ?? '#868e96'};align-self:flex-start`, text: n.topic }),
+      el('b', { text: n.title }), el('div', { class: 'm' }, el('span', { text: n.source || '新聞' }), el('span', { text: '・' }), el('span', { text: rel(n.ts) })));
+  }) : [el('div', { class: 'empty', text: '暫時沒有台灣相關新聞，請稍後再來' })]));
+  const more = $('#moreNews');
+  more.hidden = list.length <= shown;
+  more.onclick = () => { shown += 12; renderNews(); };
+}
+
+/* ---------- Hero：倒數、跑馬燈、KPI ---------- */
+function renderHero() {
+  const up = D.upcoming;
+  const total = ROWS.length;
+  const kp = [
+    ['fa-ticket', '收錄活動', total], ['fa-store', '售票平台', Object.keys(D.sources).length],
+    ['fa-bullhorn', '即將開賣', up.length], ['fa-newspaper', '台灣新聞', D.news.items.length],
+  ];
+  $('#heroKpis').replaceChildren(...kp.map(([ic, l, n]) => { const b = el('b', { class: 'mono', 'data-count': n, text: '0' }); return el('div', { class: 'kpi' }, el('span', {}, el('i', { class: `fa-solid ${ic}` }), l), b); }));
+  if (up[0]) {
+    const u = up[0]; const href = safe(u.url);
+    $('#liveTitle').replaceChildren(href ? el('a', { href, target: '_blank', rel: 'noopener noreferrer', style: 'color:inherit', text: u.title }) : u.title);
+    $('#liveMeta').textContent = `${fmtDate(u.saleStart)} 開賣｜${u.platform}${u.venue ? `｜${u.venue}` : ''}`;
+    const cells = ['天', '時', '分', '秒'].map((l) => { const b = el('b', { text: '00' }); return [b, el('div', {}, b, el('span', { text: l }))]; });
+    $('#liveCd').replaceChildren(...cells.map((c) => c[1]));
+    const tick = () => {
+      let s = Math.max(0, Math.floor((u.saleStart - Date.now()) / 1000));
+      const v = [Math.floor(s / 86400), Math.floor(s % 86400 / 3600), Math.floor(s % 3600 / 60), s % 60];
+      v.forEach((x, i) => { cells[i][0].textContent = p2(x); });
+    };
+    tick(); setInterval(tick, 1000);
+  } else { $('#liveTitle').textContent = '目前沒有已公布開賣時間的活動'; }
+  const items = up.map((u) => { const href = safe(u.url); const t = `${u.title}`; const sm = el('small', { text: `${fmtDate(u.saleStart).slice(5)} ${u.platform}` }); return href ? el('a', { href, target: '_blank', rel: 'noopener noreferrer' }, t, sm) : el('span', {}, t, sm); });
+  if (!items.length) $('#tickerBox').hidden = true;
+  else $('#belt').replaceChildren(...items, ...up.map((u) => { const href = safe(u.url); const sm = el('small', { text: `${fmtDate(u.saleStart).slice(5)} ${u.platform}` }); return href ? el('a', { href, target: '_blank', rel: 'noopener noreferrer', tabindex: -1 }, u.title, sm) : el('span', {}, u.title, sm); }));
+}
+
+/* ---------- 打字效果 ---------- */
+(function typer() {
+  const words = ['演唱會', '音樂祭', '舞台劇', '見面會', '售票資訊'];
+  const n = $('#rot');
+  if (RM) { n.textContent = words[0]; return; }
+  let w = 0; let i = 0; let del = false;
+  (function loop() {
+    const full = words[w];
+    i += del ? -1 : 1;
+    n.textContent = full.slice(0, Math.max(i, 0)) || '\u200b';
+    let wait = del ? 70 : 140;
+    if (!del && i >= full.length) { del = true; wait = 1400; } else if (del && i <= 0) { del = false; w = (w + 1) % words.length; wait = 300; }
+    setTimeout(loop, wait);
+  })();
+})();
+
+/* ---------- 捲動效果 ---------- */
+function setupScroll() {
+  const io = new IntersectionObserver((es) => es.forEach((e) => {
+    if (!e.isIntersecting) return;
+    e.target.classList.add('in');
+    if (e.target.dataset.count != null) countTo(e.target, Number(e.target.dataset.count));
+    io.unobserve(e.target);
+  }), { threshold: 0.15 });
+  document.querySelectorAll('.reveal,[data-count]').forEach((n) => io.observe(n));
+  const bar = $('#progress'); const top = $('#toTop');
+  const on = () => {
+    const h = document.documentElement;
+    bar.style.width = `${(h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight)) * 100}%`;
+    top.classList.toggle('show', h.scrollTop > 600);
+  };
+  addEventListener('scroll', on, { passive: true }); on();
+  top.addEventListener('click', () => scrollTo({ top: 0, behavior: RM ? 'auto' : 'smooth' }));
+}
+
+/* ---------- 啟動 ---------- */
+$('#asof').textContent = `資料時間 ${fmtDate(D.fetchedAt)}`;
+$('#built').textContent = `網站建置時間 ${fmtDate(D.builtAt)}（每日自動更新）`;
+renderHero();
+renderAnalysis();
+renderNews();
+setupScroll();
 </script>
 </body>
 </html>

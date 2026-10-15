@@ -65,7 +65,11 @@ npm run pack    # 打包 zip
 
 ## 入口網站與 GitHub Pages
 
-- `site/index.html`：入口頁（現況分析：類型／場館／月份／地區／平台；即將開賣；最新演唱會新聞），「售票統整平台」放在 `app/`。
+- `site/index.html`：入口頁，風格與平台一致（淺色橘調）並帶動態效果：打字標題、開賣倒數、跑馬燈、數字滾動、捲動顯示。內容：
+  - 現況分析：可點選交叉篩選，含總覽、交叉比對（類型×月份、地區×類型、平台×類型、場館×月份、類型×星期等熱力圖）、開賣與票價、資料品質。
+  - 台灣演唱會新聞：只收台灣來源，排除港澳、中國大陸與海外，並依主題分類。
+  - 課程精華：資策會 AI 導入培訓 Day 1–4 重點，與本專案的對照。
+  - 「售票統整平台」放在 `app/`。
 - 本機預覽：`npm run site` 後開啟 `dist-site/index.html`（`npm run news` 抓新聞，`npm run site:build` 只重建）。
 - 自動部署：`.github/workflows/pages.yml` 於推送 `main`、每日 06:00（台灣）與手動觸發時，執行測試、更新快照與新聞、建置並部署。
   首次使用請到 GitHub repo 的 Settings → Pages，把 Source 設為「GitHub Actions」。

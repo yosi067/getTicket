@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TicketWar｜台灣演唱會與售票資訊入口</title>
-<meta name="description" content="整合 Ticket Plus、拓元、KKTIX、OPENTIX 的公開活動資料：互動式現況分析與交叉比對、台灣演唱會新聞、售票統整平台，以及 AI 導入課程精華。">
+<meta name="description" content="整合 Ticket Plus、拓元、KKTIX、OPENTIX 的公開活動資料：互動式現況分析與交叉比對、台灣演唱會新聞、售票統整平台。">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 :root {
@@ -171,43 +171,6 @@ p.sub { margin:0 0 18px; color:var(--mute); }
 .tp { font-size:11px; padding:2px 8px; border-radius:999px; color:#fff; font-weight:700; white-space:nowrap; }
 .more { display:block; margin:16px auto 0; }
 
-/* ---- 課程精華 ---- */
-.course { background:linear-gradient(180deg,#fff 0%,#fff7f0 100%); border-top:1px solid var(--line); margin-top:60px; padding-bottom:20px; }
-.days { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:14px; position:relative; }
-.day { position:relative; overflow:hidden; }
-.day .no { position:absolute; right:10px; top:-10px; font-size:80px; font-weight:900; color:var(--pri-l); line-height:1; user-select:none; }
-.day .dt { font-size:12px; color:var(--pri-d); font-weight:800; letter-spacing:.5px; }
-.day h4 { margin:4px 0 8px; font-size:17px; position:relative; }
-.day ul { margin:0 0 10px; padding-left:18px; color:var(--mute); font-size:13px; position:relative; }
-.day .use { background:var(--pri-l); border-radius:10px; padding:8px 10px; font-size:13px; position:relative; }
-.day .use b { color:var(--pri-d); }
-.flow { display:flex; align-items:stretch; gap:0; flex-wrap:wrap; }
-.layer { flex:1 1 200px; background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 16px; position:relative; transition:transform .25s, box-shadow .25s; }
-.layer:hover { transform:translateY(-4px); box-shadow:0 12px 26px rgba(16,24,40,.1); }
-.layer .ic { width:38px; height:38px; border-radius:10px; background:var(--pri); color:#fff; display:flex; align-items:center; justify-content:center; margin-bottom:8px; }
-.layer h4 { margin:0 0 4px; } .layer ul { margin:0; padding-left:18px; font-size:13px; color:var(--mute); }
-.arrow { flex:0 0 46px; position:relative; display:flex; align-items:center; justify-content:center; color:var(--pri); }
-.arrow::before { content:""; position:absolute; left:4px; right:4px; top:50%; border-top:2px dashed var(--pri-m); }
-.arrow::after { content:""; position:absolute; top:calc(50% - 4px); left:4px; width:8px; height:8px; border-radius:50%; background:var(--pri); animation:packet 1.8s linear infinite; }
-@keyframes packet { to { left:calc(100% - 12px); } }
-@media (max-width:720px) { .arrow { flex-basis:100%; height:30px; } .arrow::before { display:none; } .arrow::after { left:calc(50% - 4px); top:0; animation:packetY 1.4s linear infinite; } @keyframes packetY { to { top:calc(100% - 8px); } } }
-.rules { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px; }
-.rule { display:flex; gap:12px; background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
-.rule .ck { flex:none; width:30px; height:30px; border-radius:50%; background:#2f9e44; color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px; }
-.rule b { display:block; } .rule span { color:var(--mute); font-size:13px; }
-.reveal .rule .ck { transform:scale(0); } .reveal.in .rule .ck { animation:pop .5s .2s both; }
-.stages { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
-@media (max-width:720px) { .stages { grid-template-columns:1fr; } }
-.stage { border:2px solid var(--line); border-radius:12px; padding:12px 14px; background:#fff; position:relative; }
-.stage.now { border-color:var(--pri); background:var(--pri-l); } .stage.now::after { content:"本專案目前階段"; position:absolute; top:-10px; right:12px; background:var(--pri); color:#fff; font-size:11px; padding:1px 10px; border-radius:999px; font-weight:700; }
-.stage b { color:var(--pri-d); } .stage p { margin:4px 0 0; font-size:13px; color:var(--mute); }
-.vibe { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
-.vibe .st { background:#fff; border:1px solid var(--line); border-radius:12px; padding:10px 14px; flex:1 1 200px; }
-.vibe .st b { color:var(--pri-d); } .vibe .st p { margin:2px 0 0; font-size:13px; color:var(--mute); }
-.vibe .ar { color:var(--pri); font-size:20px; animation:nudge 1.2s ease-in-out infinite; } @keyframes nudge { 50% { transform:translateX(6px); } }
-.sbt { margin:30px 0 10px; font-size:19px; display:flex; align-items:center; gap:8px; } .sbt i { color:var(--pri); }
-.who { color:var(--mute); font-size:13px; margin-top:6px; }
-
 footer { margin:0; padding:34px 0 40px; color:var(--faint); font-size:12px; text-align:center; background:#fff; border-top:1px solid var(--line); }
 
 /* ---- 捲動顯示 ---- */
@@ -228,7 +191,7 @@ footer { margin:0; padding:34px 0 40px; color:var(--faint); font-size:12px; text
   <div class="wrap">
     <a class="brand" href="#top"><i class="fa-solid fa-ticket"></i>TicketWar <b>入口</b></a>
     <nav>
-      <a href="#analysis">現況分析</a><a href="#news">台灣新聞</a><a href="#course">課程精華</a>
+      <a href="#analysis">現況分析</a><a href="#news">台灣新聞</a>
       <a class="cta" href="app/"><i class="fa-solid fa-arrow-right-to-bracket"></i> 進入售票統整平台</a>
     </nav>
   </div>
@@ -248,7 +211,6 @@ footer { margin:0; padding:34px 0 40px; color:var(--faint); font-size:12px; text
       <p class="lead">整合 Ticket Plus、拓元、KKTIX、OPENTIX 的公開資料。先看市場現況與台灣最新消息，再進入平台追蹤開賣、設定提醒、演練搶票。</p>
       <a class="btn" href="app/"><i class="fa-solid fa-calendar-days"></i> 進入售票統整平台</a>
       <a class="btn alt" href="#analysis"><i class="fa-solid fa-chart-column"></i> 看現況分析</a>
-      <a class="btn alt" href="#course"><i class="fa-solid fa-graduation-cap"></i> 課程精華</a>
       <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     </div>
     <div class="live" id="live">
@@ -288,79 +250,12 @@ footer { margin:0; padding:34px 0 40px; color:var(--faint); font-size:12px; text
   <!-- 新聞 -->
   <section class="blk" id="news">
     <h2 class="sec">台灣演唱會・表演新聞</h2>
-    <p class="sub">只收台灣媒體與台灣場次，已排除香港、澳門、中國大陸與海外場次。<span id="newsAsof"></span></p>
+    <p class="sub">精選台灣演出與售票相關的最新新聞。<span id="newsAsof"></span></p>
     <div class="topics" id="topics"></div>
     <div class="news" id="newsList"></div>
     <button class="btn alt more" id="moreNews" hidden>看更多新聞</button>
   </section>
 </main>
-
-<!-- 課程精華 -->
-<section class="course" id="course">
-  <div class="wrap">
-    <div class="blk reveal" style="padding-top:54px">
-      <span class="badge"><i class="fa-solid fa-graduation-cap"></i> 2026/10/07–10/15・資策會產業情報研究所</span>
-      <h2 class="sec" style="margin-top:10px">課程精華：把 4 天學到的，做成這個作品</h2>
-      <p class="sub">電子資訊產業在職菁英 AI 導入培訓工作坊（生成式 AI 實務應用：資料分析、流程自動化與 AI 工具開發）。下面是我對課程重點的整理，以及每一堂課在這個網站裡用到的地方。<br>
-      <span class="who">課程講師：徐灝（加號設計數位工程有限公司）。內容為學習心得整理，非課程原始簡報。</span></p>
-    </div>
-
-    <div class="days">
-      <div class="card day reveal"><div class="no">1</div>
-        <div class="dt">DAY 1・10/07</div><h4>生成式 AI 原理與應用趨勢</h4>
-        <ul><li>AI 把文字拆成 Token、轉成向量，靠 Self-Attention 抓重點</li><li>本質是「預測下一個 Token」；Temperature 決定穩定或有創意</li><li>資料風險邊界：個資與機密不丟給 AI</li></ul>
-        <div class="use"><b>用在這裡：</b>下午實作「AI 資訊蒐集與市場趨勢分析」→ 上方的現況分析；只用公開資料、不登入、不碰個資。</div></div>
-      <div class="card day reveal"><div class="no">2</div>
-        <div class="dt">DAY 2・10/08</div><h4>企業資料盤點與資料分析基礎</h4>
-        <ul><li>資料分三類：結構化、半結構化、非結構化</li><li>清理四步驟：探索、清洗、格式統一、AI 輔助</li><li>「資料爛，AI 結果也爛」</li></ul>
-        <div class="use"><b>用在這裡：</b>四個平台的 JSON、HTML、Atom 都正規化成同一種格式；「資料品質」分頁就是資料檢核。</div></div>
-      <div class="card day reveal"><div class="no">3</div>
-        <div class="dt">DAY 3・10/14</div><h4>Vibe Coding 與安全五條底線</h4>
-        <ul><li>三步：寫 SPEC、餵給 AI、迭代</li><li>版本控制、程式碼審查、密鑰不進程式、測試後上線、最小權限</li><li>AI 生成的程式要自己看過</li></ul>
-        <div class="use"><b>用在這裡：</b>專案的 <a href="https://github.com/yosi067/getTicket/blob/main/SPEC.md" target="_blank" rel="noopener noreferrer">SPEC.md</a> 先寫需求；下方逐條對照五條底線。</div></div>
-      <div class="card day reveal"><div class="no">4</div>
-        <div class="dt">DAY 4・10/15</div><h4>AI 工具整合與應用方案</h4>
-        <ul><li>四層整合：資料、分析、應用、輸出</li><li>API 就像餐廳點餐；整合省的是步驟之間的縫</li><li>先手動、再半自動、最後全自動，不要跳級</li></ul>
-        <div class="use"><b>用在這裡：</b>首頁、平台、複製重點與每日自動部署，剛好是一條完整的四層流程。</div></div>
-    </div>
-
-    <h3 class="sbt reveal"><i class="fa-solid fa-diagram-project"></i> Day 4：四層整合架構，對應這個專案</h3>
-    <div class="flow reveal">
-      <div class="layer"><div class="ic"><i class="fa-solid fa-database"></i></div><h4>資料層</h4><ul><li>Ticket Plus、拓元、KKTIX、OPENTIX 公開資料</li><li>Google 新聞 RSS（只取標題連結）</li></ul></div>
-      <div class="arrow"></div>
-      <div class="layer"><div class="ic"><i class="fa-solid fa-chart-pie"></i></div><h4>分析層</h4><ul><li>正規化、去重、類型與城市歸類</li><li>統計與交叉比對（上方圖表）</li></ul></div>
-      <div class="arrow"></div>
-      <div class="layer"><div class="ic"><i class="fa-solid fa-window-maximize"></i></div><h4>應用層</h4><ul><li>售票統整平台：日曆、想搶、已購、演練</li><li>Chrome 擴充功能（Ticket Plus）</li></ul></div>
-      <div class="arrow"></div>
-      <div class="layer"><div class="ic"><i class="fa-solid fa-share-nodes"></i></div><h4>輸出層</h4><ul><li>本入口頁、複製活動重點文字</li><li>.ics 行事曆、開賣提醒</li></ul></div>
-    </div>
-
-    <h3 class="sbt reveal"><i class="fa-solid fa-stairs"></i> Day 4：整合三階段</h3>
-    <div class="stages reveal">
-      <div class="stage"><b>① 手動整合</b><p>逐一打開四個平台、手動比對開賣時間。先確認每個環節有價值。</p></div>
-      <div class="stage"><b>② 半自動化</b><p>用腳本抓取並正規化，但需要人手動觸發更新與發布。</p></div>
-      <div class="stage now"><b>③ 自動化</b><p>GitHub Actions 每天自動抓資料、跑測試、建置並部署，一鍵都不用按。</p></div>
-    </div>
-
-    <h3 class="sbt reveal"><i class="fa-solid fa-shield-halved"></i> Day 3：安全五條底線，逐條對照</h3>
-    <div class="rules reveal">
-      <div class="rule"><div class="ck"><i class="fa-solid fa-check"></i></div><div><b>1. 版本控制</b><span>全部程式與資料放在 Git／GitHub，每次改動都能還原。</span></div></div>
-      <div class="rule"><div class="ck"><i class="fa-solid fa-check"></i></div><div><b>2. 程式碼審查</b><span>統計與解析都寫成純函式，並有自動化測試把關，AI 產生的程式也要看過。</span></div></div>
-      <div class="rule"><div class="ck"><i class="fa-solid fa-check"></i></div><div><b>3. 密鑰不進程式</b><span>所有來源都是公開頁面與公開 RSS，整個專案不需要任何 API Key。</span></div></div>
-      <div class="rule"><div class="ck"><i class="fa-solid fa-check"></i></div><div><b>4. 測試後才上線</b><span>部署流程先跑測試，測試沒過就不會發布；另有精簡版先做小範圍試用。</span></div></div>
-      <div class="rule"><div class="ck"><i class="fa-solid fa-check"></i></div><div><b>5. 最小權限</b><span>平台唯讀、被動：不登入、不代購、不處理驗證碼；擴充功能只開必要權限與網域。</span></div></div>
-    </div>
-
-    <h3 class="sbt reveal"><i class="fa-solid fa-wand-magic-sparkles"></i> Day 3：Vibe Coding 三步，這個專案怎麼走</h3>
-    <div class="vibe reveal">
-      <div class="st"><b>① 寫 SPEC</b><p>先把痛點寫成「輸入什麼、輸出什麼、要哪些功能」：四平台活動、開賣倒數、提醒。</p></div>
-      <i class="ar fa-solid fa-arrow-right"></i>
-      <div class="st"><b>② 交給 AI 生成</b><p>由 AI 產出可執行的網頁與腳本，我再逐段檢視。</p></div>
-      <i class="ar fa-solid fa-arrow-right"></i>
-      <div class="st"><b>③ 迭代</b><p>跑起來不對就具體描述問題：新聞混入香港、需要複製按鈕、分析要更深，都是這樣一輪輪補上。</p></div>
-    </div>
-  </div>
-</section>
 
 <footer>
   <div class="wrap">
